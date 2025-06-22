@@ -9,7 +9,7 @@ const {Booking, BookingHistory} = require('./models/BookingHistory');
 
 const availabilityRoutes = require('./routes/availabilityRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
-const facilityRoutes = require('./routes/facultyRoutes');
+const facilityRoutes = require('./routes/facilityRoutes');
 const audiRoutes = require('./routes/audiRoutes');
 const hallRoutes = require('./routes/hallRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
