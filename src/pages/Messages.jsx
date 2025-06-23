@@ -224,6 +224,9 @@ from ${req.startTime} to ${req.endTime} for the event "${req.eventName}".`;
                   <span style={{ color: '#2e7d32' }}>Date:</span> {req.date}
                 </div>
                 <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: '#2e7d32' }}>Event:</span> {req.eventName}
+                </div>
+                <div style={{ marginBottom: 8 }}>
                   <span style={{ color: '#2e7d32' }}>Time:</span> {req.startTime} - {req.endTime}
                 </div>
                 <div style={{ marginBottom: 8 }}>

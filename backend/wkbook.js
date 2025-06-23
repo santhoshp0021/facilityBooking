@@ -15,29 +15,6 @@ async function updateBookingsForWeek() {
     return { day, slot };
   };
 
-  // Step 3: Define full list of facilities
-  const facilities = [
-    { name: 'KP-107', type: 'room' },
-    { name: 'KP-102', type: 'room' },
-    { name: 'KP-210', type: 'room' },
-    { name: 'KP-303', type: 'room' },
-    { name: 'KP-307', type: 'room' },
-    { name: 'KP-106', type: 'room' },
-    { name: 'KP-206', type: 'room' },
-    { name: 'KP-407', type: 'room' },
-    { name: 'KP-406', type: 'room' },
-    { name: 'R-1', type: 'room' },
-    { name: 'R-2', type: 'room' },
-    { name: 'R-3', type: 'room' },
-    { name: 'Ground Floor Lab', type: 'lab' },
-    { name: 'First Floor Lab', type: 'lab' },
-    { name: 'Second Floor Lab', type: 'lab' },
-    { name: 'Temenos Floor Lab', type: 'lab' },
-    { name: 'Projector1', type: 'projector' },
-    { name: 'Projector2', type: 'projector' },
-    { name: 'Projector3', type: 'projector' }
-  ];
-
   // Step 4: Fetch all weektables for selected week
   const weektables = await Weektable.find({ weekStart: selectedWeekStart });
   console.log("✅ Found", weektables.length, "weektables");
@@ -55,6 +32,7 @@ async function updateBookingsForWeek() {
       let booking = await Booking.findOne({ periodId });
 
       if (!booking) {
+
         // Build facility list with all free initially
         const facilitiesNew = facilities.map(fac => ({
           name: fac.name,
@@ -63,7 +41,7 @@ async function updateBookingsForWeek() {
           bookedBy: ""
         }));
 
-        booking = new Booking({ periodId, facilitiesNew });
+        booking = new Booking({ periodId, facilities: facilitiesNew });
       }
 
       // Update facilities that are used by user in this period
@@ -77,7 +55,7 @@ async function updateBookingsForWeek() {
           fac.bookedBy = userId;
         }
       }
-
+      console.log('hi',i);
       await booking.save();
     }
   }

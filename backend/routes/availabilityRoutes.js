@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Booking } = require('../models/BookingHistory');
-
+const Weektable = require('../models/Weektable');
 // List 12 rooms for a period, showing their status from Booking schema
 router.get('/rooms', async (req, res) => {
   const { periodId } = req.query;

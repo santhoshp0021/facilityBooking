@@ -68,7 +68,6 @@ router.get("/facilities/available", async (req, res) => {
             type: f.type,
             free: !usedProjectors.has(f.name)
           }));
-          console.log(userId,'c1');
         return res.json(projectors);
       }
       //c) Projector booked so class/lab can be booked
@@ -127,7 +126,6 @@ router.get("/facilities/available", async (req, res) => {
     }
     const index    = (dayNum - 1) * 8 + slotNum;
     const periodId = `${slotNum + 1}-${dayNum}`;
-  
     try {
       // 3) Update Weektable
       const wt = await Weektable.findOne({ userId, weekStart: weekstart });
@@ -150,9 +148,16 @@ router.get("/facilities/available", async (req, res) => {
         };
       }
       const slotData = wt.periods[index];
-      if (type === "room")      {slotData.roomNo    = facility;slotData.free = false;}
-      else if (type === "lab")  {slotData.lab       = facility;slotData.free = false;}
-      else if (type === "projector") slotData.projector = facility;
+
+      if((type ==='room' || type === 'lab' ) && !slotData.free) {
+        return res.status(409).json({ error: "Already booked another room/lab for this slot" });
+      }
+      if(type === 'projector' && slotData.projector){
+        return res.status(409).json({ error: "Already booked another projector for this slot" });
+      }
+      if (type === "room")      {console.log('c3');slotData.roomNo    = facility;slotData.free = false;}
+      else if (type === "lab")  {console.log('c4');slotData.lab       = facility;slotData.free = false;}
+      else if (type === "projector") {console.log('c5');slotData.projector = facility;}
       else return res.status(400).json({ error: "Invalid facility type" });
       await wt.save();
       const userObj = await User.findOne({ userId });
@@ -167,7 +172,7 @@ router.get("/facilities/available", async (req, res) => {
         {
           $set: {
             "facilities.$[f].free": false,
-            "facilities.$[f].bookedby": userId
+            "facilities.$[f].bookedBy": userId
           }
         },
         {

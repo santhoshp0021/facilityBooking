@@ -128,6 +128,7 @@ const Requestspage = ({User}) => {
                 <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Hall</th>
                 <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>User</th>
                 <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Date</th>
+                <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Event</th>
                 <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Time</th>
                 <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Status</th>
                 <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Action</th>
@@ -139,6 +140,7 @@ const Requestspage = ({User}) => {
                   <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{req.hallName}</td>
                   <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{req.userId}</td>
                   <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{req.date}</td>
+                  <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{req.eventName}</td>
                   <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{req.startTime} - {req.endTime}</td>
                   <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{req.status}</td>
                   <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>

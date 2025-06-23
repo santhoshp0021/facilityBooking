@@ -14,7 +14,7 @@ const audiRoutes = require('./routes/audiRoutes');
 const hallRoutes = require('./routes/hallRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const bookRoutes = require('./routes/bookRoutes');
-
+const adminRoutes = require('./routes/adminRoutes');
 const updateBookingsForWeek = require('./wkbook');
 const {
   getCurrentWeekStart,
@@ -36,16 +36,13 @@ app.use('/api',hallRoutes);
 app.use('/api/enrollment',enrollmentRoutes);
 app.use('/api',availabilityRoutes);
 app.use('/api',bookRoutes);
+app.use('/api/admin',adminRoutes);
 
 // Connect to MongoDB
 mongoose.connect('mongodb+srv://Vishva06:vishva2006@cluster0.1odrrkw.mongodb.net/facilitydb', {
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => {
-  console.log('MongoDB connected');
-}).catch((err) => {
-  console.error('MongoDB connection error:', err);
-});
+}).then(() => {console.log('MongoDB connected');}).catch((err) => {console.error('MongoDB connection error:', err);});
 
 // updateBookingsForWeek().catch(console.error);
 
@@ -98,11 +95,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // --- Call this on server startup ---
-ensureWeektablesForAllUsers().then(() => {
-  console.log('');
-}).catch(err => {
-  console.error('Error ensuring weektables:', err);
-});
+ensureWeektablesForAllUsers().then(() => {}).catch(err => {console.error('Error ensuring weektables:', err);});
 
 // API to get today's 8 periods for a user from weektable
 app.get('/api/user/:userId/today-periods', async (req, res) => {

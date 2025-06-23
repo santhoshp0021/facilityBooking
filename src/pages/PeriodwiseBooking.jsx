@@ -4,7 +4,7 @@ import Banner from "../components/Banner";
 
 const storedUser = localStorage.getItem("user");
 const user = storedUser ? JSON.parse(storedUser) : null;
-console.log(user);
+
 const timeSlots = [
   "Period 1",
   "Period 2",
@@ -16,7 +16,7 @@ const timeSlots = [
   "Period 8",
 ];
 
-const FacultyBooking = () => {
+const PeriodwiseBooking = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [availableDates, setAvailableDates] = useState([]);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState(null);
@@ -261,4 +261,4 @@ const FacultyBooking = () => {
   );
 };
 
-export default FacultyBooking;
+export default PeriodwiseBooking;

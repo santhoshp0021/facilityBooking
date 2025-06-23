@@ -4,8 +4,8 @@ const HallRequest = require('../models/HallRequest');
 
 // API to create a hall booking request
 router.post('/hall-request', async (req, res) => {
-  const { userId, hallName, date, startTime, endTime } = req.body;
-  if (!userId || !hallName || !date || !startTime || !endTime) {
+  const { userId, hallName, date, startTime, endTime, eventName } = req.body;
+  if (!userId || !hallName || !date || !startTime || !endTime || !eventName) {
     return res.status(400).json({ error: 'All fields are required' });
   }
   try {
@@ -31,7 +31,8 @@ router.post('/hall-request', async (req, res) => {
       hallName,
       date,
       startTime,
-      endTime
+      endTime,
+      eventName
     });
     res.json({ success: true });
   } catch (err) {
@@ -85,6 +86,22 @@ router.post('/hall-requests/:id/status', async (req, res) => {
     } catch (err) {
       res.status(500).json({ error: 'Could not update status' });
     }
+});
+
+router.get('/hall-requests/slots', async (req, res) => {
+  const { hallName, date } = req.query;
+
+  if (!hallName || !date) {
+    return res.status(400).json({ error: 'hallName and date are required' });
+  }
+
+  try {
+    const bookings = await HallRequest.find({ hallName, date, status:"accepted" });
+    res.json(bookings);
+  } catch (err) {
+    console.error('Error fetching bookings:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
   
 module.exports = router;

@@ -11,11 +11,12 @@ import Requestspage from './pages/Admin/Requestspage';
 import Messages from './pages/Messages';
 import Historypage from './pages/Admin/Historypage';
 import Dashboard from './pages/Admin/Dashboard';
-import FacultyBooking from './pages/FacultyBookingPage';
 import EnrollmentPage from  './pages/Admin/EnrollmentPage';
 import TimeTable from './pages/Admin/TimeTable';
 import Facilities from './pages/Admin/Facilities';
 import Register from './pages/Admin/Register';
+import PeriodwiseBooking from './pages/PeriodwiseBooking';
+import FacilitywiseBooking from './pages/FacilitywiseBooking';
 function App() {
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('user');
@@ -50,7 +51,8 @@ function App() {
                 <Route path="/messages" element={<Messages User={user} />} />
                 <Route path="/history" element={<Historypage User={user} />} />
                 <Route path="dashboard" element={<Dashboard User={user} />} />
-                <Route path="/facultyBooking" element={<FacultyBooking User={user} />} />
+                <Route path="/periodwiseBooking" element={<PeriodwiseBooking User={user} />} />
+                <Route path="/facilitywiseBooking" element={<FacilitywiseBooking User={user} />} />
                 <Route path="/enrollment" element={<EnrollmentPage User={user} />} />
                 <Route path='/timetable' element={<TimeTable User={user} />} />
                 <Route path='/facilities' element={<Facilities User={user} />} />
