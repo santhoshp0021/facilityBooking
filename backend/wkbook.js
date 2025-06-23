@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Weektable = require("./models/Weektable");
 const {Booking} = require("./models/BookingHistory");
-
+const facilities = require('./facilities');
 async function updateBookingsForWeek() {
   // Connect to MongoDB
   
@@ -16,7 +16,7 @@ async function updateBookingsForWeek() {
   };
 
   // Step 3: Define full list of facilities
-  const allFacilities = [
+  const facilities = [
     { name: 'KP-107', type: 'room' },
     { name: 'KP-102', type: 'room' },
     { name: 'KP-210', type: 'room' },
@@ -56,14 +56,14 @@ async function updateBookingsForWeek() {
 
       if (!booking) {
         // Build facility list with all free initially
-        const facilities = allFacilities.map(fac => ({
+        const facilitiesNew = facilities.map(fac => ({
           name: fac.name,
           type: fac.type,
           free: true,
           bookedBy: ""
         }));
 
-        booking = new Booking({ periodId, facilities });
+        booking = new Booking({ periodId, facilitiesNew });
       }
 
       // Update facilities that are used by user in this period
