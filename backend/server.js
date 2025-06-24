@@ -75,7 +75,7 @@ app.post('/api/login', async (req, res) => {
 
 //Register 
 app.post('/api/register', async (req, res) => {
-  const {  password, role, userId } = req.body;
+  const {  password, role, userId, email } = req.body;
   try {
     const existingUser = await User.findOne({ userId });
     if (existingUser) {
@@ -84,7 +84,8 @@ app.post('/api/register', async (req, res) => {
     const newUser = new User({  
       password,
       role,
-      userId
+      userId,
+      email
     });
     await newUser.save();
     res.status(201).json({ message: 'User registered successfully' });
@@ -234,12 +235,14 @@ app.post('/api/labs/free-by-name', async (req, res) => {
     lab.free = true;
     lab.bookedBy='';
     await booking.save();
-
+    const dateObj = new Date();
+    dateObj.setHours(0,0,0,0);
     // Insert into booking history for freeing
     const userObj = await User.findOne({ userId });
     await BookingHistory.create({
       userId: userObj._id,
       periodId,
+      usageDate: dateObj,
       facility: { name: labName, type: 'lab', free: true }
     });
 

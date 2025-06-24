@@ -16,6 +16,7 @@ const bookingHistorySchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     periodId: { type: String, required: true },
     facility: { type: facilitySchema },
+    usageDate: {type:Date, required:true},
     date: { type: Date, default: Date.now }
 });
 const BookingHistory = mongoose.model('BookingHistory', bookingHistorySchema);

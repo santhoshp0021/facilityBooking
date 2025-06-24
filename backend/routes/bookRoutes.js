@@ -29,12 +29,14 @@ router.post('/book-projector', async (req, res) => {
       projector.free = false;
       projector.bookedBy = userId; // Store who booked it
       await booking.save();
-  
+      const dateObj = new Date();
+      dateObj.setHours(0,0,0,0);
       // Insert into booking history
       const userObj = await User.findOne({ userId });
       await BookingHistory.create({
         userId: userObj._id,
         periodId,
+        usageDate: dateObj,
         facility: { name: projectorName, type: 'projector', free: false }
       });
       // Update the period in Weektable for ONLY the booking user
@@ -71,12 +73,15 @@ router.post('/book-room', async (req, res) => {
       room.free = false;
       room.bookedBy =userId;
       await booking.save();
-  
+
+      const dateObj = new Date();
+       dateObj.getDatesetHours(0,0,0,0);
       // Insert into booking history
       const userObj = await User.findOne({ userId });
       await BookingHistory.create({
         userId: userObj._id,
         periodId,
+        usageDate: dateObj,
         facility: { name: roomName, type: 'room', free: false }
       });
   
@@ -122,12 +127,14 @@ router.post('/book-lab', async (req, res) => {
       lab.free = false;
       lab.bookedBy=userId;
       await booking.save();
-  
+      const dateObj = new Date();
+      dateObj.setHours(0,0,0,0);
       // Insert into booking history
       const userObj = await User.findOne({ userId });
       await BookingHistory.create({
         userId: userObj._id,
         periodId,
+        usageDate: dateObj,
         facility: { name: labName, type: 'lab', free: false }
       });
   
@@ -194,9 +201,12 @@ router.post('/free-period/:periodId', async (req, res) => {
           fac.bookedBy = ''; 
           // Insert into booking history for freeing
           const userObj = await User.findOne({ userId });
+          const dateObj = new Date();
+          dateObj.setHours(0,0,0,0);
           await BookingHistory.create({
             userId: userObj._id,
             periodId,
+            usageDate:dateObj,
             facility: { name: fac.name, type: fac.type, free: true }
           });
         }

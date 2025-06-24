@@ -10,6 +10,7 @@ export default function Register() {
     userId: '',
     password: '',
     role: 'student',
+    email: ''
   });
   const [message, setMessage] = useState('');
 
@@ -31,7 +32,7 @@ export default function Register() {
       const data = await res.json();
       if (res.ok) {
         setMessage('User registered successfully!');
-        setForm({ userId: '',  password: '', role: 'student' });
+        setForm({ userId: '',  password: '', role: 'student', email:'' });
       } else {
         setMessage(data.message || 'Registration failed');
       }
@@ -71,6 +72,7 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="register-form">
             <input type="text" name="userId" placeholder="User ID" value={form.userId} onChange={handleChange} required />
             <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} required />
+            <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
             <select name="role" value={form.role} onChange={handleChange} required>
               <option value="student">Student</option>
               <option value="student_rep">Student Rep</option>

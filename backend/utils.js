@@ -85,8 +85,8 @@ async function ensureWeektablesForAllUsers() {
           }));
         } else {
           // 👇 Fallback: generate default 40-period week
-          const startTimes = ["08:30", "09:30", "10:30", "11:25", "13:10", "14:05", "15:00", "15:55"];
-          const endTimes   = ["09:25", "10:15", "11:20", "12:15", "14:00", "14:55", "15:50", "16:45"];
+          const startTimes = ["08:30", "09:25", "10:30", "11:25", "13:10", "14:05", "15:00", "15:55"];
+          const endTimes   = ["09:20", "10:15", "11:20", "12:15", "14:00", "14:55", "15:50", "16:45"];
   
           for (let day = 1; day <= 5; day++) {
             for (let periodNo = 1; periodNo < 9; periodNo++) {
@@ -100,8 +100,8 @@ async function ensureWeektablesForAllUsers() {
                 staffName: '',
                 lab: '',
                 projector: '',
-                startTime: startTimes[periodNo],
-                endTime: endTimes[periodNo]
+                startTime: startTimes[periodNo-1],
+                endTime: endTimes[periodNo-1]
               });
             }
           }

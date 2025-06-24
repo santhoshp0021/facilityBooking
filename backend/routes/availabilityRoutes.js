@@ -45,9 +45,9 @@ router.get('/projectors', async (req, res) => {
     const booking = await Booking.findOne({ periodId });
     // If no booking found, show all projectors as free (not booked)
     if (!booking) return res.json([
-      { name: "Projector 1", type: "projector", free: true },
-      { name: "Projector 2", type: "projector", free: true },
-      { name: "Projector 3", type: "projector", free: true }
+      { name: "Projector1", type: "projector", free: true },
+      { name: "Projector2", type: "projector", free: true },
+      { name: "Projector3", type: "projector", free: true }
     ]);
 
     // Ensure all 3 projectors are always returned, with correct status

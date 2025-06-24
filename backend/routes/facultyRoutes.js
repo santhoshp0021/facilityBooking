@@ -12,8 +12,9 @@ router.get("/facilities/available", async (req, res) => {
       return res.status(400).json({ error: "Missing date, slot or userId" });
     }
     // 1) Compute weekStart and slot index
+    console.log(date);
     const monday = getWeekStart(date);
-    monday.setHours(0,0,0,0);
+    monday.setHours(0,0,0,0);console.log(monday);/*
     const dayNum = new Date(date).getDay();     // 1–5
     const slotNum = parseInt(slot,10);          // 0–7
     if (dayNum < 1 || dayNum > 5 || slotNum < 0 || slotNum > 7) {
@@ -90,7 +91,7 @@ router.get("/facilities/available", async (req, res) => {
           let isUsed;
           if (f.type === "room")      isUsed = usedRooms.has(f.name);
           else if (f.type === "lab")  isUsed = usedLabs.has(f.name);
-          else /* projector */        isUsed = usedProjectors.has(f.name);
+          else                        isUsed = usedProjectors.has(f.name);
   
           return { ...f, free: !isUsed };
         });
@@ -98,7 +99,7 @@ router.get("/facilities/available", async (req, res) => {
     } catch (err) {
       console.error("Facility availability error:", err);
       return res.status(500).json({ error: "Server error" });
-    }
+    }*/
   });
   
   router.post("/facilities/book", async (req, res) => {
@@ -107,18 +108,19 @@ router.get("/facilities/available", async (req, res) => {
     if (!date || slot === undefined || !facility || !type || !userId) {
       return res.status(400).json({ error: "Missing fields" });
     }
-  
+    console.log(date);
     // 1) Compute weekStart (Monday 00:00) for this date
     const weekstart = getWeekStart(date);
     weekstart.setHours(0, 0, 0, 0);
-  
+   
     // Also compute end of that week (next Monday)
     const weekEnd = new Date(weekstart);
     weekEnd.setDate(weekEnd.getDate() + 7);
   
     // 2) Parse day/slot
     const dateObj = new Date(date);
-    
+    dateObj.setHours(0,0,0,0);
+ 
     const dayNum = dateObj.getDay();         // 1–5
     const slotNum = parseInt(slot, 10);      // 0–7
     if (dayNum < 1 || dayNum > 5 || slotNum < 0 || slotNum > 7) {
@@ -164,6 +166,7 @@ router.get("/facilities/available", async (req, res) => {
        await BookingHistory.create({
             userId:userObj._id,
             periodId,
+            usageDate: dateObj,
             facility: { name: facility, type, free: false }
           });
       if (dateObj < weekstart || dateObj >= weekEnd) return 

@@ -153,93 +153,69 @@ export default function BookingPage({User}) {
         fontSize: '1.3rem',
         marginBottom: 24
       }}>
-        Your Periods for Today
+        {today.getDay() === 0 || today.getDay() === 6
+          ? 'There is no period today'
+          : 'Your Periods for Today'}
       </h3>
-      
-      {loading ? (
-        <LoadingSpinner message="Loading your periods..." />
-      ) : (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 18,
-          width: '100%',
-          maxWidth: 900
-        }}>
-          {/* Chunk periods into rows of 4 */}
-          {Array.from({ length: 2 }).map((_, rowIdx) => (
-            <div key={rowIdx} style={{ display: 'flex', flexWrap: 'nowrap', gap: 18 }}>
-              {periods.slice(rowIdx * 4, rowIdx * 4 + 4).map(period => (
-                <div
-                  key={period.periodNo}
-                  style={{
-                    flex: '1 0 21%',
-                    background: period.free ? '#d4edda' : '#f8d7da',
-                    border: period.free ? '2px solid #a5d6a7' : '2px solid #ef9a9a',
-                    borderRadius: 12,
-                    padding: '1.2rem 1.5rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    marginBottom: 6,
-                    boxShadow: '0 2px 8px rgba(182,137,74,0.08)'
-                  }}
-                >
-                  <div style={{
-                    fontWeight: 600,
-                    fontSize: '1.1rem',
-                    color: '#7a5c1c',
-                    marginBottom: 6
-                  }}>
-                    Period {period.periodNo}
-                  </div>
-                  {period.free ? (
-                    <div style={{ color: '#388e3c', marginBottom: 8, fontWeight: 500 }}>
-                      Free
+  
+      {(today.getDay() === 0 || today.getDay() === 6) ? null : (
+        loading ? (
+          <LoadingSpinner message="Loading your periods..." />
+        ) : (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 18,
+            width: '100%',
+            maxWidth: 900
+          }}>
+            {Array.from({ length: 2 }).map((_, rowIdx) => (
+              <div key={rowIdx} style={{ display: 'flex', flexWrap: 'nowrap', gap: 18 }}>
+                {periods.slice(rowIdx * 4, rowIdx * 4 + 4).map(period => (
+                  <div
+                    key={period.periodNo}
+                    style={{
+                      flex: '1 0 21%',
+                      background: period.free ? '#d4edda' : '#f8d7da',
+                      border: period.free ? '2px solid #a5d6a7' : '2px solid #ef9a9a',
+                      borderRadius: 12,
+                      padding: '1.2rem 1.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      marginBottom: 6,
+                      boxShadow: '0 2px 8px rgba(182,137,74,0.08)'
+                    }}
+                  >
+                    <div style={{
+                      fontWeight: 600,
+                      fontSize: '1.1rem',
+                      color: '#7a5c1c',
+                      marginBottom: 6
+                    }}>
+                      Period {period.periodNo}
                     </div>
-                  ) : (
-                    <div style={{ color: '#b71c1c', marginBottom: 8, fontWeight: 500 }}>
-                      Occupied
-                    </div>
-                  )}
-                  {!period.free && (
-                    <div style={{ marginBottom: 8 }}>
-                      <div><b>Staff Name:</b> {period.staffName || '-'}</div>
-                      <div><b>Course Code:</b> {period.courseCode || '-'}</div>
-<div>
-  <b>
-    {period.roomNo
-      ? 'Room No:'
-      : period.lab
-      ? 'Lab:'
-      : 'Room No:'}
-  </b>{' '}
-  {period.roomNo || period.lab || '-'}
-</div>                    </div>
-                  )}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {period.free ? (
-                      <button
-                        onClick={() => handleBookPeriod(period)}
-                        style={{
-                          background: '#7a5c1c',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: 8,
-                          padding: '0.5rem 1.2rem',
-                          cursor: 'pointer',
-                          fontWeight: 600,
-                          fontSize: '1rem',
-                          transition: 'background 0.15s'
-                        }}
-                      >
-                        Book
-                      </button>
+                      <div style={{ color: '#388e3c', marginBottom: 8, fontWeight: 500 }}>
+                        Free
+                      </div>
                     ) : (
-                      <>
+                      <div style={{ color: '#b71c1c', marginBottom: 8, fontWeight: 500 }}>
+                        Occupied
+                      </div>
+                    )}
+                    {!period.free && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div><b>Staff Name:</b> {period.staffName || '-'}</div>
+                        <div><b>Course Code:</b> {period.courseCode || '-'}</div>
+                        <div><b>{period.roomNo ? 'Room No:' : period.lab ? 'Lab:' : 'Room No:'}</b> {period.roomNo || period.lab || '-'}</div>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {period.free ? (
                         <button
-                          onClick={() => handleFree(period)}
+                          onClick={() => handleBookPeriod(period)}
                           style={{
-                            background: '#b6894a',
+                            background: '#7a5c1c',
                             color: '#fff',
                             border: 'none',
                             borderRadius: 8,
@@ -250,13 +226,14 @@ export default function BookingPage({User}) {
                             transition: 'background 0.15s'
                           }}
                         >
-                          Free
+                          Book
                         </button>
-                        {!hasBookedProjector(period.periodId) && (
+                      ) : (
+                        <>
                           <button
-                            onClick={() => handleBookProjector(period)}
+                            onClick={() => handleFree(period)}
                             style={{
-                              background: '#388e3c',
+                              background: '#b6894a',
                               color: '#fff',
                               border: 'none',
                               borderRadius: 8,
@@ -267,18 +244,37 @@ export default function BookingPage({User}) {
                               transition: 'background 0.15s'
                             }}
                           >
-                            Book Projector
+                            Free
                           </button>
-                        )}
-                      </>
-                    )}
+                          {!hasBookedProjector(period.periodId) && (
+                            <button
+                              onClick={() => handleBookProjector(period)}
+                              style={{
+                                background: '#388e3c',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: 8,
+                                padding: '0.5rem 1.2rem',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: '1rem',
+                                transition: 'background 0.15s'
+                              }}
+                            >
+                              Book Projector
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );
+  
 }
