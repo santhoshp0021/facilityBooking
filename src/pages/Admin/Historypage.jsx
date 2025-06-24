@@ -48,6 +48,7 @@ const Historypage = ({User}) => {
         const text = await res.text();
         try {
           const data = JSON.parse(text);
+          console.log(data);
           setHistory(Array.isArray(data) ? data : []);
         } catch {
           setError('Invalid response from server');
@@ -98,7 +99,7 @@ const Historypage = ({User}) => {
 
   // Download booking history as CSV
   const handleDownload = () => {
-    const header = ['User', 'Period ID', 'Period Day', 'Period No', 'Facility Name', 'Facility Type', 'Booked/Free', 'Date'];
+    const header = ['User', 'Period ID', 'Period Day', 'Period No', 'Facility Name', 'Facility Type', 'Booked/Free', 'Usage Date','Date'];
     const rows = history.map(rec => {
       const { periodNo, periodDay } = getPeriodInfo(rec.periodId);
       return [
@@ -109,6 +110,7 @@ const Historypage = ({User}) => {
         rec.facility?.name || '',
         rec.facility?.type || '',
         rec.facility?.free === false ? 'Booked' : 'Freed',
+        rec.usageDate || '',
         rec.date ? new Date(rec.date).toLocaleString() : ''
       ].join(',');
     });
@@ -256,6 +258,7 @@ const Historypage = ({User}) => {
                   <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Period No</th>
                   <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Facility Name</th>
                   <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Facility Type</th>
+                  <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Usage Date</th>
                   <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Booked/Free</th>
                   <th style={{ padding: 10, border: '1px solid #d1c4a3' }}>Date</th>
                 </tr>
@@ -271,6 +274,7 @@ const Historypage = ({User}) => {
                       <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{periodNo}</td>
                       <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{rec.facility?.name || ''}</td>
                       <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{rec.facility?.type || ''}</td>
+                      <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{rec.usageDate || ''}</td>
                       <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{rec.facility?.free === false ? 'Booked' : 'Freed'}</td>
                       <td style={{ padding: 10, border: '1px solid #e3d9c6' }}>{rec.date ? new Date(rec.date).toLocaleString() : ''}</td>
                     </tr>

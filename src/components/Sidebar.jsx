@@ -74,6 +74,7 @@ export default function Sidebar() {
           </li>
           {['secretary'].includes(user.role) && (
             <li>
+              <Link to="/facilitywiseBooking" onClick={() => setOpen(false)} style={linkStyle}>Facilitywise Booking</Link>
               <Link to="/halls" onClick={() => setOpen(false)} style={linkStyle}>Halls</Link>
               <Link to="/auditorium" onClick={() => setOpen(false)} style={linkStyle}>Auditorium</Link>
               <Link to="/messages" onClick={() => setOpen(false)} style={linkStyle}>Messages</Link>

@@ -5,6 +5,7 @@ import { jsPDF } from 'jspdf';
 const Messages = ({User}) => {
   const [hallAccepted, setHallAccepted] = useState([]);
   const [hallRejected, setHallRejected] = useState([]);
+  const [hallWithdrawn, setHallWithdrawn] = useState([]);
   const [audiAccepted, setAudiAccepted] = useState([]);
   const [audiRejected, setAudiRejected] = useState([]);
   const [hallLoading, setHallLoading] = useState(true);
@@ -47,17 +48,30 @@ const Messages = ({User}) => {
           } catch {
             return [];
           }
+        }),
+        fetch(`http://localhost:5000/api/hall-requests?status=withdrawn&userId=${encodeURIComponent(userId)}`)
+        .then(async res => {
+          if (!res.ok) return [];
+          const text = await res.text();
+          try {
+            const data = JSON.parse(text);
+            return Array.isArray(data) ? data : [];
+          } catch {
+            return [];
+          }
         })
     ])
-      .then(([hallAcceptedData, hallRejectedData]) => {
+      .then(([hallAcceptedData, hallRejectedData, hallWithdrawnData]) => {
         setHallAccepted(hallAcceptedData);
         setHallRejected(hallRejectedData);
+        setHallWithdrawn(hallWithdrawnData);
         setHallLoading(false);
       })
       .catch(() => {
         setError('Could not connect to backend');
         setHallAccepted([]);
         setHallRejected([]);
+        setHallWithdrawn([]);
         setHallLoading(false);
       });
       Promise.all([
@@ -306,6 +320,77 @@ from ${req.startTime} to ${req.endTime} for the event "${req.eventName}".`;
                   textAlign: 'center'
                 }}>
                   Booking Rejected
+                </div>
+                <div style={{ marginBottom: 8, fontWeight: 500 }}>
+                  <span style={{ color: '#b71c1c' }}>Hall:</span> {req.hallName}
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: '#b71c1c' }}>Date:</span> {req.date}
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: '#b71c1c' }}>Time:</span> {req.startTime} - {req.endTime}
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: '#b71c1c' }}>Booked By:</span> {req.userId}
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: '#b71c1c' }}>Status:</span> <span style={{ color: '#b71c1c', fontWeight: 600 }}>{req.status}</span>
+                </div>
+                <div style={{ marginBottom: 8, fontSize: '0.95rem', color: '#555' }}>
+                  <span>Booked At:</span> {new Date(req.bookedAt).toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <h2 style={{
+        color: '#b71c1c',
+        fontSize: '2rem',
+        margin: '1rem 0 1.5rem 0',
+        letterSpacing: 1
+      }}>
+        Withdrawn Hall Bookings
+      </h2>
+      <div style={{
+        background: '#fff',
+        borderRadius: 16,
+        boxShadow: '0 4px 16px rgba(183,28,28,0.10)',
+        padding: 24,
+        width: '100%',
+        maxWidth: 900
+      }}>
+        {!hallLoading && !error && hallWithdrawn.length === 0 && (
+          <div style={{ color: '#b71c1c', fontWeight: 500 }}>No withdrawn hall bookings found.</div>
+        )}
+        {!hallLoading && !error && hallWithdrawn.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, justifyContent: 'center' }}>
+            {hallWithdrawn.map(req => (
+              <div
+                key={req._id}
+                style={{
+                  background: '#ffebee',
+                  border: '2px solid #b71c1c',
+                  borderRadius: 14,
+                  minWidth: 280,
+                  maxWidth: 340,
+                  padding: '1rem',
+                  marginBottom: 24,
+                  boxShadow: '0 4px 16px rgba(183,28,28,0.10)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  position: 'relative'
+                }}
+              >
+                <div style={{
+                  fontWeight: 700,
+                  fontSize: '1.2rem',
+                  color: '#b71c1c',
+                  marginBottom: 10,
+                  textAlign: 'center'
+                }}>
+                  Booking Withdrawn
                 </div>
                 <div style={{ marginBottom: 8, fontWeight: 500 }}>
                   <span style={{ color: '#b71c1c' }}>Hall:</span> {req.hallName}

@@ -38,6 +38,12 @@ function getNextWorkingDays(n = 20) {
   return days;
 }
 
+function isFutureOrToday(dateStr,slotStartTime) {
+  dateStr = `${dateStr}T${slotStartTime}:00`;
+  const dateStrObj = new Date(dateStr);
+  const now = new Date();
+  return dateStrObj >= now;
+}
 export default function HallListingPage() {
   const halls = [
     { name: 'RUSA Gallery' },
@@ -53,13 +59,15 @@ export default function HallListingPage() {
   const [hallBookings, setHallBookings] = useState({});
   const [selectedSlots, setSelectedSlots] = useState({});
   const [eventNames, setEventNames] = useState({});
-
+  const [pdfFiles, setPdfFiles] = useState({});
   useEffect(() => {
     halls.forEach(hall => {
       fetchBookings(hall.name, selectedDate);
     });
   }, [selectedDate]);
- 
+ const handleFileChange = (hallName, file) => {
+  setPdfFiles(prev => ({ ...prev, [hallName]: file }));
+};
   const fetchBookings = async (hallName, date) => {
     try {
       const res = await fetch(`http://localhost:5000/api/hall-requests/slots?hallName=${encodeURIComponent(hallName)}&date=${date}`);
@@ -98,39 +106,42 @@ export default function HallListingPage() {
   };
 
   const handleConfirmBooking = async (hallName) => {
-    const slots = selectedSlots[hallName];
-    const eventName = eventNames[hallName];
-    if (!slots || slots.length === 0 || !eventName?.trim() || !areSlotsContinuous(slots)) {
-      alert('Select continuous slots and provide event name.');
-      return;
-    }
+  const slots = selectedSlots[hallName];
+  const eventName = eventNames[hallName];
+  const pdfFile = pdfFiles[hallName];
+  if (!slots || slots.length === 0 || !eventName?.trim() || !areSlotsContinuous(slots) || !pdfFile) {
+    alert('Select continuous slots, provide event name, and upload a PDF.');
+    return;
+  }
 
-    try {
-      const res = await fetch('http://localhost:5000/api/hall-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          hallName,
-          date: selectedDate,
-          startTime: slots[0].start,
-          endTime: slots[slots.length - 1].end,
-          eventName
-        })
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || 'Booking failed');
-      } else {
-        alert(`${hallName} request sent for admin's approval ${selectedDate} ${slots[0].start} - ${slots[slots.length - 1].end}`);
-        fetchBookings(hallName, selectedDate);
-        setSelectedSlots(prev => ({ ...prev, [hallName]: [] }));
-        setEventNames(prev => ({ ...prev, [hallName]: '' }));
-      }
-    } catch {
-      alert('Error connecting to server');
+  const formData = new FormData();
+  formData.append('userId', userId);
+  formData.append('hallName', hallName);
+  formData.append('date', selectedDate);
+  formData.append('startTime', slots[0].start);
+  formData.append('endTime', slots[slots.length - 1].end);
+  formData.append('eventName', eventName);
+  formData.append('pdf', pdfFile);
+
+  try {
+    const res = await fetch('http://localhost:5000/api/hall-request', {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || 'Booking failed');
+    } else {
+      alert(`${hallName} request sent for admin's approval ${selectedDate} ${slots[0].start} - ${slots[slots.length - 1].end}`);
+      fetchBookings(hallName, selectedDate);
+      setSelectedSlots(prev => ({ ...prev, [hallName]: [] }));
+      setEventNames(prev => ({ ...prev, [hallName]: '' }));
+      setPdfFiles(prev => ({ ...prev, [hallName]: null }));
     }
-  };
+  } catch {
+    alert('Error connecting to server');
+  }
+};
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'auto', background: '#f5f5dc', fontFamily: 'Segoe UI' }}>
@@ -166,7 +177,7 @@ export default function HallListingPage() {
                 return (
                   <div
                     key={slot.start + '-' + slot.end}
-                    onClick={() => { if (!booked) handleSlotToggle(hall.name, slot); }}
+                    onClick={() => { if (!booked && isFutureOrToday(selectedDate,slot.start)) handleSlotToggle(hall.name, slot); }}
                     style={{
                       background: booked ? 'rgb(212, 89, 51)' : isSelected ? '#a7dba7' : '#fff',
                       color: booked ? 'white' : 'black',
@@ -185,32 +196,42 @@ export default function HallListingPage() {
               })}
             </div>
             {(selectedSlots[hall.name] && selectedSlots[hall.name].length > 0) && (
-              <div style={{ marginTop: 10 }}>
-                <input
-                  type="text"
-                  placeholder="Event Name"
-                  value={eventNames[hall.name] || ''}
-                  onChange={e => setEventNames(prev => ({ ...prev, [hall.name]: e.target.value }))}
-                  style={{ padding: '6px 10px', fontSize: '1rem', width: '40%' }}
-                />
-                <button
-                  onClick={() => handleConfirmBooking(hall.name)}
-                  disabled={!areSlotsContinuous(selectedSlots[hall.name]) || !(eventNames[hall.name] || '').trim()}
-                  style={{
-                    marginLeft: 12,
-                    background: '#388e3c',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '6px 14px',
-                    cursor: 'pointer',
-                    opacity: areSlotsContinuous(selectedSlots[hall.name]) && (eventNames[hall.name] || '').trim() ? 1 : 0.5
-                  }}
-                >
-                  Confirm Booking
-                </button>
-              </div>
-            )}
+  <div style={{ marginTop: 10 }}>
+    <input
+      type="text"
+      placeholder="Event Name"
+      value={eventNames[hall.name] || ''}
+      onChange={e => setEventNames(prev => ({ ...prev, [hall.name]: e.target.value }))}
+      style={{ padding: '6px 10px', fontSize: '1rem', width: '40%' }}
+    />
+    <input
+      type="file"
+      accept="application/pdf"
+      onChange={e => handleFileChange(hall.name, e.target.files[0])}
+      style={{ marginLeft: 12 }}
+    />
+    <button
+      onClick={() => handleConfirmBooking(hall.name)}
+      disabled={
+        !areSlotsContinuous(selectedSlots[hall.name]) ||
+        !(eventNames[hall.name] || '').trim() ||
+        !pdfFiles[hall.name]
+      }
+      style={{
+        marginLeft: 12,
+        background: '#388e3c',
+        color: '#fff',
+        border: 'none',
+        borderRadius: 6,
+        padding: '6px 14px',
+        cursor: 'pointer',
+        opacity: areSlotsContinuous(selectedSlots[hall.name]) && (eventNames[hall.name] || '').trim() && pdfFiles[hall.name] ? 1 : 0.5
+      }}
+    >
+      Confirm Booking
+    </button>
+  </div>
+)}
           </div>
         ))}
       </div>

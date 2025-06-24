@@ -7,6 +7,7 @@ const audiReqSchema= new mongoose.Schema({
   eventName:{type:String, required: true},
   additionalInfo:{type:String},
   date: { type: String, required: true },
+  pdf: { data: Buffer, contentType: String },
   bookedAt: { type: Date, default: Date.now },
   status: { type: String, default: 'pending' },
 });

@@ -119,23 +119,6 @@ router.post('/free-slot-period', async (req, res) => {
       if (!user || !user.email) {
         return res.status(404).json({ error: 'User email not found' });
       }
-      // 3. Send email to user
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: admin.email, // replace with real admin email
-          pass: 'ibkbdwgufmxzfmqa'   // use app password or secure method
-        }
-      });
-  
-      const mailOptions = {
-        from: admin.email,
-        to: user.email,
-        subject: 'Slot Freed by Admin',
-        text: `Your booking for ${facilityName} (${type}) on ${date}, period ${periodNo} has been freed by the admin.`
-      };
-  
-      await transporter.sendMail(mailOptions);
   
       // 4. Update Weektable
       const index = (day - 1) * 8 + (periodNo - 1); // 0-based index
@@ -166,6 +149,23 @@ router.post('/free-slot-period', async (req, res) => {
         usageDate: dateObj,
         facility: { name: facilityName, type: type, free: true }
       });
+      // 3. Send email to user
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: admin.email, // replace with real admin email
+          pass: 'ibkbdwgufmxzfmqa'   // use app password or secure method
+        }
+      });
+  
+      const mailOptions = {
+        from: admin.email,
+        to: user.email,
+        subject: 'Slot Freed by Admin',
+        text: `Booking cancellation:\nFacility : ${facilityName}\nType : ${type}\nDate :  ${date}\nPeriod:${periodNo}\nThe booking has been freed by the admin.`
+      };
+  
+      await transporter.sendMail(mailOptions);
       res.json({ message: 'Slot freed and user notified.' });
       if (dateObj < weekStart || dateObj >= weekEnd) return
       // 1. Free the slot in Booking
@@ -208,7 +208,7 @@ router.post('/free-slot-hall', async (req, res) => {
         status: 'accepted'
       },
       {
-        $set: { status: 'rejected' }
+        $set: { status: 'withdrawn' }
       },
       { new: true }
     );
@@ -234,15 +234,15 @@ router.post('/free-slot-hall', async (req, res) => {
     });
 
     const mailOptions = {
-      from: '',
+      from: 'admin.email',
       to: user.email,
       subject: `Hall Slot Cancelled by Admin`,
-      text: `Your hall booking for ${hallName} on ${date} from ${startTime} to ${endTime} (Event: ${hallReq.eventName}) has been cancelled by the admin.`
+      text: `Hall:${hallName}\nDate:${date}\nTime: ${startTime} - ${endTime} \nEvent: ${hallReq.eventName}\nBooking has been withdrawn by the admin.`
     };
 
     await transporter.sendMail(mailOptions);
 
-    res.json({ message: 'Hall booking status set to rejected and user notified' });
+    res.json({ message: 'Hall booking status set to withdrawn and user notified' });
   } catch (err) {
     console.error('Error freeing hall slot:', err);
     res.status(500).json({ error: 'Internal server error' });

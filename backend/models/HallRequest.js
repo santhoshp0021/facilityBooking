@@ -7,6 +7,7 @@ const hallReqSchema= new mongoose.Schema({
   endTime: { type: String, required: true },
   eventName:{ type: String, required: true },
   date: { type: String, required: true },
+  pdf: { data: Buffer, contentType: String },
   bookedAt: { type: Date, default: Date.now },
   status: { type: String, default: 'pending' },
 });

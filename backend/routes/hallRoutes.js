@@ -1,12 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const HallRequest = require('../models/HallRequest');
+const multer = require('multer');
 
-// API to create a hall booking request
-router.post('/hall-request', async (req, res) => {
+// Multer config for PDF uploads (max 2MB)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Only PDF files are allowed!'));
+  }
+});
+
+// API to create a hall booking request (with PDF)
+router.post('/hall-request', upload.single('pdf'), async (req, res) => {
   const { userId, hallName, date, startTime, endTime, eventName } = req.body;
   if (!userId || !hallName || !date || !startTime || !endTime || !eventName) {
     return res.status(400).json({ error: 'All fields are required' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'Supporting PDF is required' });
   }
   try {
     // Overlap condition: check if any accepted booking for this hall and date overlaps the requested time
@@ -15,7 +30,6 @@ router.post('/hall-request', async (req, res) => {
       date,
       status: { $in: ['accepted'] },
       $or: [
-        // Existing booking starts before new end and ends after new start
         {
           startTime: { $lt: endTime },
           endTime: { $gt: startTime }
@@ -32,7 +46,8 @@ router.post('/hall-request', async (req, res) => {
       date,
       startTime,
       endTime,
-      eventName
+      eventName,
+      pdf: { data: req.file.buffer, contentType: req.file.mimetype }
     });
     res.json({ success: true });
   } catch (err) {
@@ -48,7 +63,16 @@ router.get('/hall-requests', async (req, res) => {
     if (userId) filter.userId = userId;
     try {
       const requests = await HallRequest.find(filter).sort({ bookedAt: -1 });
-      res.json(requests);
+      // Encode PDF buffer to base64 for each request
+      const requestsWithBase64 = requests.map(r => {
+        const obj = r.toObject();
+        if (obj.pdf && obj.pdf.data) {
+           const buf = obj.pdf.data.buffer ? obj.pdf.data.buffer : obj.pdf.data;
+  obj.pdf.data = Buffer.from(buf).toString('base64');
+     }
+        return obj;
+      });
+      res.json(requestsWithBase64);
     } catch (err) {
       res.status(500).json({ error: 'Could not fetch hall requests' });
     }
@@ -77,7 +101,7 @@ router.get('/hall-requests/filter', async (req, res) => {
 router.post('/hall-requests/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
-    if (!['accepted', 'rejected'].includes(status)) {
+    if (!['accepted', 'rejected', 'withdrawn'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
     try {
@@ -96,8 +120,17 @@ router.get('/hall-requests/slots', async (req, res) => {
   }
 
   try {
-    const bookings = await HallRequest.find({ hallName, date, status:"accepted" });
-    res.json(bookings);
+    const bookings = await HallRequest.find({ hallName, date, status: "accepted" });
+    // Encode PDF buffer to base64 for each booking
+    const bookingsWithBase64 = bookings.map(r => {
+      const obj = r.toObject();
+      if (obj.pdf && obj.pdf.data) {
+         const buf = obj.pdf.data.buffer ? obj.pdf.data.buffer : obj.pdf.data;
+  obj.pdf.data = Buffer.from(buf).toString('base64');
+      }
+      return obj;
+    });
+    res.json(bookingsWithBase64);
   } catch (err) {
     console.error('Error fetching bookings:', err);
     res.status(500).json({ error: 'Server error' });
