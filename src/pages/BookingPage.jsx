@@ -26,7 +26,6 @@ function isFutureOrToday(slotStartTime) {
   const now = new Date();
   var [dateStr,time] = date.split('T');
   dateStr = `${dateStr}T${slotStartTime}:00`;
-  console.log(dateStr,now);
   const dateStrObj = new Date(dateStr);
   return dateStrObj >= now;
 }
