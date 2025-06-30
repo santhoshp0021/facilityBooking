@@ -4,18 +4,6 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Sidebar from '../components/Sidebar';
 import Banner from '../components/Banner';
 
-
-const periodsTime = [
-  { start: '08:30', end: '09:20' },
-  { start: '09:25', end: '10:15' },
-  { start: '10:30', end: '11:20' },
-  { start: '11:25', end: '12:15' },
-  { start: '13:10', end: '14:00' },
-  { start: '14:05', end: '14:55' },
-  { start: '15:00', end: '15:50' },
-  { start: '15:55', end: '16:45' }
-];
-
 function getTodayDayNumber() {
   const jsDay = new Date().getDay();
   return jsDay === 0 ? 1 : jsDay > 5 ? 5 : jsDay;
@@ -230,7 +218,7 @@ export default function BookingPage({User}) {
                         <div><b>{period.roomNo ? 'Room No:' : period.lab ? 'Lab:' : 'Room No:'}</b> {period.roomNo || period.lab || '-'}</div>
                       </div>
                     )}
-                    {isFutureOrToday(periodsTime[period.periodNo-1].start)&&(<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {isFutureOrToday(period.startTime)&&(<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {(period.free)? (
                         <button
                           onClick={() => handleBookPeriod(period)}

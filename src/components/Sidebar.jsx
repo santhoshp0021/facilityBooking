@@ -105,6 +105,9 @@ export default function Sidebar() {
               <li>
                 <Link to="/dashboard" onClick={() => setOpen(false)} style={linkStyle}>Dashboard</Link>
               </li>
+              {/* <li>
+                <Link to="/facilities" onClick={() => setOpen(false)} style={linkStyle}>Facilities</Link>
+              </li> */}
               <li>
                 <Link to="/enrollment" onClick={() => setOpen(false)} style={linkStyle}>Enrollment</Link>
               </li>

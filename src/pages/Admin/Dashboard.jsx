@@ -45,29 +45,11 @@ function generateTimeSlots(start = "08:00", end = "17:00", interval = 15) {
   return slots;
 }
 
-const defaultFacilities = [
-  { name: 'KP-107', type: 'room' }, { name: 'KP-102', type: 'room' },
-  { name: 'KP-210', type: 'room' }, { name: 'KP-303', type: 'room' },
-  { name: 'KP-307', type: 'room' }, { name: 'KP-106', type: 'room' },
-  { name: 'KP-206', type: 'room' }, { name: 'KP-407', type: 'room' },
-  { name: 'KP-406', type: 'room' }, { name: 'R-1', type: 'room' },
-  { name: 'R-2', type: 'room' }, { name: 'R-3', type: 'room' },
-  { name: 'Ground Floor Lab', type: 'lab' },
-  { name: 'First Floor Lab', type: 'lab' },
-  { name: 'Second Floor Lab', type: 'lab' },
-  { name: 'Temenos Floor Lab', type: 'lab' },
-  { name: 'Projector1', type: 'projector' },
-  { name: 'Projector2', type: 'projector' },
-  { name: 'Projector3', type: 'projector' },
-  { name: 'RUSA Gallery', type: 'hall' },
-  { name: 'Conference Hall', type: 'hall' },
-  { name: 'Turing Hall', type: 'hall' }
-];
-
 const Dashboard = () => {
   const [dateList, setDateList] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [facilityUsage, setFacilityUsage] = useState({});
+  const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -88,6 +70,18 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const res = await axios.get('/api/allFacilities');
+        setFacilities(res.data);
+      } catch {
+        setFacilities([]);
+      }
+    };
+    fetchFacilities();
+  }, []);
+
+  useEffect(() => {
     const fetchUsage = async () => {
       if (!selectedDate) return;
       setLoading(true);
@@ -101,49 +95,48 @@ const Dashboard = () => {
     };
     fetchUsage();
   }, [selectedDate]);
-  // For rooms, labs, projectors (period-based)
-const handleFreePeriod = async (facilityName, type,periodNo, userId) => {
-  try {
-    const res = await axios.post('/api/admin/free-slot-period', {
-      facilityName,
-      type,
-      date: selectedDate,
-      periodNo,
-      userId
-    });
-    alert(res.data.message || 'Slot freed successfully');
-    const usageRes = await axios.get('/api/admin/usage-status', { params: { date: selectedDate } });
-    setFacilityUsage(usageRes.data);
-  } catch (err) {
-    console.error(err);
-    alert('Failed to free the slot');
-  }
-};
 
-// For halls (time-based)
-const handleFreeHall = async (hallName,startTime, endTime, userId) => {
-  try {
-    const res = await axios.post('/api/admin/free-slot-hall', {
-      hallName,
-      date: selectedDate,
-      startTime,
-      endTime,
-      userId
-    });
-    alert(res.data.message || 'Slot freed successfully');
-    const usageRes = await axios.get('/api/admin/usage-status', { params: { date: selectedDate } });
-    setFacilityUsage(usageRes.data);
-  } catch (err) {
-    console.error(err);
-    alert('Failed to free the slot');
-  }
-};
+  const handleFreePeriod = async (facilityName, type, periodNo, userId) => {
+    try {
+      const res = await axios.post('/api/admin/free-slot-period', {
+        facilityName,
+        type,
+        date: selectedDate,
+        periodNo,
+        userId
+      });
+      alert(res.data.message || 'Slot freed successfully');
+      const usageRes = await axios.get('/api/admin/usage-status', { params: { date: selectedDate } });
+      setFacilityUsage(usageRes.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to free the slot');
+    }
+  };
 
-  
+  const handleFreeHall = async (hallName, startTime, endTime, userId) => {
+    try {
+      const res = await axios.post('/api/admin/free-slot-hall', {
+        hallName,
+        date: selectedDate,
+        startTime,
+        endTime,
+        userId
+      });
+      alert(res.data.message || 'Slot freed successfully');
+      const usageRes = await axios.get('/api/admin/usage-status', { params: { date: selectedDate } });
+      setFacilityUsage(usageRes.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to free the slot');
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   const hallSlots = generateTimeSlots();
-  function isFutureOrToday(dateStr,slotStartTime) {
+
+  function isFutureOrToday(dateStr, slotStartTime) {
     dateStr = `${dateStr}T${slotStartTime}:00`;
     const dateStrObj = new Date(dateStr);
     const now = new Date();
@@ -179,7 +172,7 @@ const handleFreeHall = async (hallName,startTime, endTime, userId) => {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 32, width: '100%' }}>
-        {defaultFacilities.map(facility => {
+        {facilities.map(facility => {
           const { name, type } = facility;
           const usageData = facilityUsage[name] || { name, type, usage: [] };
           const { usage } = usageData;
@@ -227,7 +220,7 @@ const handleFreeHall = async (hallName,startTime, endTime, userId) => {
                       {slot.start} - {slot.end} <br />
                       {match ? (type === 'hall' ? `${match.bookedBy}:${match.eventName}` : match.bookedBy) : 'Free'}
 
-                      {match && isFutureOrToday(selectedDate,slot.start) && (
+                      {match && isFutureOrToday(selectedDate, slot.start) && (
                         <button
                           style={{
                             position: 'absolute',
@@ -245,10 +238,10 @@ const handleFreeHall = async (hallName,startTime, endTime, userId) => {
                             if (type === 'hall') {
                               handleFreeHall(name, slot.start, slot.end, match.bookedBy);
                             } else {
-                              handleFreePeriod(name, type,match.periodNo, match.bookedBy);
+                              handleFreePeriod(name, type, match.periodNo, match.bookedBy);
                             }
                           }}
-                          >
+                        >
                           Free
                         </button>
                       )}

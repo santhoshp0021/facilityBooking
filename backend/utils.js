@@ -55,7 +55,7 @@ function getWeekStartWithOffset(offset = 0) {
 
 async function ensureWeektablesForAllUsers() {
     const users = await User.find({});
-    
+    //console.log(users);
     for (let weekOffset = 0; weekOffset < 4; weekOffset++) {
       const weekStart = getWeekStartWithOffset(weekOffset);
   

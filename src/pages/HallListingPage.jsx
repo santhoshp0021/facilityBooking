@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Banner from '../components/Banner';
 import Sidebar from '../components/Sidebar';
+import axios from 'axios';
 
 function generateTimeSlots(start = "08:00", end = "17:00", interval = 15) {
   const slots = [];
@@ -38,64 +39,75 @@ function getNextWorkingDays(n = 20) {
   return days;
 }
 
-function isFutureOrToday(dateStr,slotStartTime) {
-  dateStr = `${dateStr}T${slotStartTime}:00`;
-  const dateStrObj = new Date(dateStr);
-  const now = new Date();
-  return dateStrObj >= now;
+function isFutureOrToday(dateStr, slotStartTime) {
+  const dateStrObj = new Date(`${dateStr}T${slotStartTime}:00`);
+  return dateStrObj >= new Date();
 }
+
 export default function HallListingPage() {
-  const halls = [
-    { name: 'RUSA Gallery' },
-    { name: 'Turing Hall' }
-  ];
-
-  const userId = JSON.parse(localStorage.getItem('user'))?.userId || 'demoUser';
-  const slots = generateTimeSlots();
-  const dates = getNextWorkingDays();
-  const today = dates[0] || '';
-
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [halls, setHalls] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
   const [hallBookings, setHallBookings] = useState({});
   const [selectedSlots, setSelectedSlots] = useState({});
   const [eventNames, setEventNames] = useState({});
   const [pdfFiles, setPdfFiles] = useState({});
+  const slots = generateTimeSlots();
+  const dates = getNextWorkingDays();
+  const userId = JSON.parse(localStorage.getItem('user'))?.userId || 'demoUser';
+
+  useEffect(() => {
+    setSelectedDate(dates[0] || '');
+  }, []);
+
+  useEffect(() => {
+    const fetchHalls = async () => {
+      try {
+        const res = await axios.get('/api/allFacilities');
+        const allowed = ['hall'];
+        setHalls(res.data.filter(f => allowed.includes(f.type)));
+      } catch {
+        setHalls([]);
+      }
+    };
+    fetchHalls();
+  }, []);
+
   useEffect(() => {
     halls.forEach(hall => {
       fetchBookings(hall.name, selectedDate);
     });
-  }, [selectedDate]);
- const handleFileChange = (hallName, file) => {
-  setPdfFiles(prev => ({ ...prev, [hallName]: file }));
-};
+  }, [selectedDate, halls]);
+
   const fetchBookings = async (hallName, date) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/hall-requests/slots?hallName=${encodeURIComponent(hallName)}&date=${date}`);
+      const res = await fetch(`/api/hall-requests/slots?hallName=${encodeURIComponent(hallName)}&date=${date}`);
       const data = await res.json();
-      console.log(data);
       setHallBookings(prev => ({ ...prev, [hallName]: { ...prev[hallName], [date]: data } }));
     } catch {
       setHallBookings(prev => ({ ...prev, [hallName]: { ...prev[hallName], [date]: [] } }));
     }
   };
 
+  const handleFileChange = (hallName, file) => {
+    setPdfFiles(prev => ({ ...prev, [hallName]: file }));
+  };
+
   const isSlotBooked = (hallName, date, slot) => {
     const bookings = hallBookings[hallName]?.[date] || [];
-    return bookings.find(b =>  (b.startTime <= slot.start && b.endTime >= slot.start) || (b.startTime>=slot.start && b.endTime <= slot.end));
+    return bookings.find(b =>
+      (b.startTime <= slot.start && b.endTime >= slot.start) ||
+      (b.startTime >= slot.start && b.endTime <= slot.end)
+    );
   };
 
   const handleSlotToggle = (hallName, slot) => {
     const key = hallName;
     const current = selectedSlots[key] || [];
     const index = current.findIndex(s => s.start === slot.start && s.end === slot.end);
-
-    if (index > -1) {
-      const updated = [...current.slice(0, index), ...current.slice(index + 1)];
-      setSelectedSlots(prev => ({ ...prev, [key]: updated }));
-    } else {
-      const updated = [...current, slot].sort((a, b) => a.start.localeCompare(b.start));
-      setSelectedSlots(prev => ({ ...prev, [key]: updated }));
-    }
+    const updated = index > -1
+      ? [...current.slice(0, index), ...current.slice(index + 1)]
+      : [...current, slot].sort((a, b) => a.start.localeCompare(b.start));
+    setSelectedSlots(prev => ({ ...prev, [key]: updated }));
   };
 
   const areSlotsContinuous = (slots) => {
@@ -106,45 +118,43 @@ export default function HallListingPage() {
   };
 
   const handleConfirmBooking = async (hallName) => {
-  const slots = selectedSlots[hallName];
-  const eventName = eventNames[hallName];
-  const pdfFile = pdfFiles[hallName];
-  if (!slots || slots.length === 0 || !eventName?.trim() || !areSlotsContinuous(slots) || !pdfFile) {
-    alert('Select continuous slots, provide event name, and upload a PDF.');
-    return;
-  }
+    const slots = selectedSlots[hallName];
+    const eventName = eventNames[hallName];
+    const pdfFile = pdfFiles[hallName];
 
-  const formData = new FormData();
-  formData.append('userId', userId);
-  formData.append('hallName', hallName);
-  formData.append('date', selectedDate);
-  formData.append('startTime', slots[0].start);
-  formData.append('endTime', slots[slots.length - 1].end);
-  formData.append('eventName', eventName);
-  formData.append('pdf', pdfFile);
-
-  try {
-    const res = await fetch('http://localhost:5000/api/hall-request', {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.error || 'Booking failed');
-    } else {
-      alert(`${hallName} request sent for admin's approval ${selectedDate} ${slots[0].start} - ${slots[slots.length - 1].end}`);
-      fetchBookings(hallName, selectedDate);
-      setSelectedSlots(prev => ({ ...prev, [hallName]: [] }));
-      setEventNames(prev => ({ ...prev, [hallName]: '' }));
-      setPdfFiles(prev => ({ ...prev, [hallName]: null }));
+    if (!slots || slots.length === 0 || !eventName?.trim() || !areSlotsContinuous(slots) || !pdfFile) {
+      alert('Select continuous slots, provide event name, and upload a PDF.');
+      return;
     }
-  } catch {
-    alert('Error connecting to server');
-  }
-};
+
+    const formData = new FormData();
+    formData.append('userId', userId);
+    formData.append('hallName', hallName);
+    formData.append('date', selectedDate);
+    formData.append('startTime', slots[0].start);
+    formData.append('endTime', slots[slots.length - 1].end);
+    formData.append('eventName', eventName);
+    formData.append('pdf', pdfFile);
+
+    try {
+      const res = await fetch('/api/hall-request', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Booking failed');
+      } else {
+        alert(`${hallName} request sent for ${selectedDate} ${slots[0].start} - ${slots[slots.length - 1].end}`);
+        fetchBookings(hallName, selectedDate);
+        setSelectedSlots(prev => ({ ...prev, [hallName]: [] }));
+        setEventNames(prev => ({ ...prev, [hallName]: '' }));
+        setPdfFiles(prev => ({ ...prev, [hallName]: null }));
+      }
+    } catch {
+      alert('Error connecting to server');
+    }
+  };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'auto', background: '#f5f5dc', fontFamily: 'Segoe UI' }}>
+    <div style={{ width: '100vw', height: '100vh', overflow: 'auto', background: '#f5f5dc' }}>
       <Banner />
       <Sidebar />
       <div style={{ paddingTop: 100, paddingLeft: 120, paddingRight: 20 }}>
@@ -167,6 +177,7 @@ export default function HallListingPage() {
             </button>
           ))}
         </div>
+
         {halls.map(hall => (
           <div key={hall.name} style={{ marginBottom: 30 }}>
             <h3 style={{ color: '#7a5c1c' }}>{hall.name}</h3>
@@ -177,7 +188,7 @@ export default function HallListingPage() {
                 return (
                   <div
                     key={slot.start + '-' + slot.end}
-                    onClick={() => { if (!booked && isFutureOrToday(selectedDate,slot.start)) handleSlotToggle(hall.name, slot); }}
+                    onClick={() => !booked && isFutureOrToday(selectedDate, slot.start) && handleSlotToggle(hall.name, slot)}
                     style={{
                       background: booked ? 'rgb(212, 89, 51)' : isSelected ? '#a7dba7' : '#fff',
                       color: booked ? 'white' : 'black',
@@ -195,43 +206,44 @@ export default function HallListingPage() {
                 );
               })}
             </div>
+
             {(selectedSlots[hall.name] && selectedSlots[hall.name].length > 0) && (
-  <div style={{ marginTop: 10 }}>
-    <input
-      type="text"
-      placeholder="Event Name"
-      value={eventNames[hall.name] || ''}
-      onChange={e => setEventNames(prev => ({ ...prev, [hall.name]: e.target.value }))}
-      style={{ padding: '6px 10px', fontSize: '1rem', width: '40%' }}
-    />
-    <input
-      type="file"
-      accept="application/pdf"
-      onChange={e => handleFileChange(hall.name, e.target.files[0])}
-      style={{ marginLeft: 12 }}
-    />
-    <button
-      onClick={() => handleConfirmBooking(hall.name)}
-      disabled={
-        !areSlotsContinuous(selectedSlots[hall.name]) ||
-        !(eventNames[hall.name] || '').trim() ||
-        !pdfFiles[hall.name]
-      }
-      style={{
-        marginLeft: 12,
-        background: '#388e3c',
-        color: '#fff',
-        border: 'none',
-        borderRadius: 6,
-        padding: '6px 14px',
-        cursor: 'pointer',
-        opacity: areSlotsContinuous(selectedSlots[hall.name]) && (eventNames[hall.name] || '').trim() && pdfFiles[hall.name] ? 1 : 0.5
-      }}
-    >
-      Confirm Booking
-    </button>
-  </div>
-)}
+              <div style={{ marginTop: 10 }}>
+                <input
+                  type="text"
+                  placeholder="Event Name"
+                  value={eventNames[hall.name] || ''}
+                  onChange={e => setEventNames(prev => ({ ...prev, [hall.name]: e.target.value }))}
+                  style={{ padding: '6px 10px', fontSize: '1rem', width: '40%' }}
+                />
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={e => handleFileChange(hall.name, e.target.files[0])}
+                  style={{ marginLeft: 12 }}
+                />
+                <button
+                  onClick={() => handleConfirmBooking(hall.name)}
+                  disabled={
+                    !areSlotsContinuous(selectedSlots[hall.name]) ||
+                    !(eventNames[hall.name] || '').trim() ||
+                    !pdfFiles[hall.name]
+                  }
+                  style={{
+                    marginLeft: 12,
+                    background: '#388e3c',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '6px 14px',
+                    cursor: 'pointer',
+                    opacity: areSlotsContinuous(selectedSlots[hall.name]) && (eventNames[hall.name] || '').trim() && pdfFiles[hall.name] ? 1 : 0.5
+                  }}
+                >
+                  Confirm Booking
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -4,9 +4,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Banner from '../components/Banner';
 import Sidebar from '../components/Sidebar';
 
-const PROJECTOR_NAMES = ["Projector 1", "Projector 2", "Projector 3"];
-
-export default function ProjectorListingPage({User}) {
+export default function ProjectorListingPage() {
   const [projectors, setProjectors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,56 +24,53 @@ export default function ProjectorListingPage({User}) {
         setLoading(false);
         return;
       }
-      const res = await fetch(`http://localhost:5000/api/projectors?periodId=${periodId}`);
-      let projectorsFromBooking = [];
-      if (res.ok) {
-        const data = await res.json();
-        projectorsFromBooking = Array.isArray(data)
-          ? data.filter(f => f.type === 'projector')
-          : [];
-      } else {
-        setError('Failed to fetch projectors');
-        setLoading(false);
-        return;
-      }
-      // Match ignoring spaces and case
-      const projectorStatus = PROJECTOR_NAMES.map(name => {
-        const fac = projectorsFromBooking.find(
-          f => f.name && f.name.replace(/\s+/g, '').toLowerCase() === name.replace(/\s+/g, '').toLowerCase()
-        );
-        return fac ? fac : { name, type: 'projector', free: true };
-      });
+
+      const [allFacilitiesRes, bookingStatusRes] = await Promise.all([
+        fetch('/api/facilities/projectors'),
+        fetch(`/api/projectors?periodId=${periodId}`)
+      ]);
+
+      const allProjectors = await allFacilitiesRes.json();
+      const projectorsBooked = await bookingStatusRes.json();
+
+      const statusMap = new Map();
+      projectorsBooked.forEach(p => statusMap.set(p.name.trim().toLowerCase(), true));
+
+      const projectorStatus = allProjectors.map(proj => ({
+        name: proj.name,
+        type: proj.type,
+        free: !statusMap.get(proj.name.trim().toLowerCase())
+      }));
+
       setProjectors(projectorStatus);
     } catch (err) {
+      console.error(err);
       setError('Could not fetch projectors');
     }
     setLoading(false);
   }
 
   useEffect(() => {
-    if (!period){
+    if (!period) {
       alert('No period selected');
       navigate('/booking');
       return;
     }
-    if(!user) {
-      alert('User not logged in.');
-      navigate('/login');
-      return;
-    }
+    
     fetchProjectors();
     // eslint-disable-next-line
   }, [period?.periodId, user?.userId]);
 
   const handleBook = async (projector) => {
-    if (!projector.free || !projector.name || typeof projector.name !== 'string' || !projector.name.trim()) {
-      alert('This projector is already booked or invalid projector name.');
+    if (!projector.free || !projector.name?.trim()) {
+      alert('This projector is already booked or invalid name.');
       setLoading(true);
       await fetchProjectors();
       return;
     }
+
     try {
-      const res = await fetch('http://localhost:5000/api/book-projector', {
+      const res = await fetch('/api/book-projector', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -84,19 +79,18 @@ export default function ProjectorListingPage({User}) {
           projectorName: projector.name.trim()
         })
       });
+
       if (!res.ok) {
         const err = await res.json();
         alert(err.error || 'Booking failed');
-        setLoading(true);
         await fetchProjectors();
         return;
       }
+
       alert('The projector is booked');
-      setLoading(true);
       await fetchProjectors();
-    } catch (e) {
+    } catch {
       alert('Booking failed');
-      setLoading(true);
       await fetchProjectors();
     }
   };
@@ -104,7 +98,6 @@ export default function ProjectorListingPage({User}) {
   if (loading) {
     return (
       <div style={{
-       
         minHeight: '100vh',
         minWidth: '100vw',
         background: 'linear-gradient(135deg, #f5f5dc 0%, #e3d9c6 100%)',
@@ -112,31 +105,30 @@ export default function ProjectorListingPage({User}) {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        
         <LoadingSpinner message="Loading projectors..." />
       </div>
     );
   }
+
   if (error) {
     return <div style={{ marginTop: 60, color: 'red', fontSize: 18 }}>{error}</div>;
   }
+
   return (
     <div style={{
-      paddingTop:96,
+      paddingTop: 96,
       minHeight: '100vh',
       minWidth: '100vw',
       background: 'linear-gradient(135deg, #f5f5dc 0%, #e3d9c6 100%)',
       fontFamily: 'Segoe UI, Arial, sans-serif',
-      padding: 0,
-      margin: 0,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center'
     }}>
-      <Banner/>
+      <Banner />
       <Sidebar />
       <h2 style={{
-        paddingTop:96,
+        paddingTop: 96,
         color: '#7a5c1c',
         fontSize: '2rem',
         margin: '2rem 0 1.5rem 0',
@@ -157,7 +149,7 @@ export default function ProjectorListingPage({User}) {
             key={projector.name}
             style={{
               padding: '2rem 2.5rem',
-              background: projector.free === false ? '#f8d7da' : '#d4edda', // red if occupied, green if free
+              background: projector.free === false ? '#f8d7da' : '#d4edda',
               borderRadius: 16,
               minWidth: 220,
               minHeight: 180,
@@ -196,42 +188,23 @@ export default function ProjectorListingPage({User}) {
             }}>
               Status: {projector.free === false ? 'Occupied' : 'Free'}
             </div>
-            {projector.free ? (
-              <button
-                onClick={() => handleBook(projector)}
-                style={{
-                  background: '#7a5c1c',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '0.7rem 1.5rem',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  marginTop: 8,
-                  transition: 'background 0.15s'
-                }}
-              >
-                Book
-              </button>
-            ) : (
-              <button
-                disabled
-                style={{
-                  background: '#bdbdbd',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '0.7rem 1.5rem',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  marginTop: 8,
-                  cursor: 'not-allowed'
-                }}
-              >
-                Occupied
-              </button>
-            )}
+            <button
+              onClick={() => handleBook(projector)}
+              disabled={!projector.free}
+              style={{
+                background: projector.free ? '#7a5c1c' : '#bdbdbd',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '0.7rem 1.5rem',
+                fontWeight: 600,
+                fontSize: '1rem',
+                marginTop: 8,
+                cursor: projector.free ? 'pointer' : 'not-allowed'
+              }}
+            >
+              {projector.free ? 'Book' : 'Occupied'}
+            </button>
           </div>
         ))}
       </div>

@@ -6,6 +6,8 @@ const facilitySchema = new mongoose.Schema({
     free: { type: Boolean, default: true },
     bookedBy:{type:String,default:''}
 });
+const Facility = mongoose.model('Facility', facilitySchema);
+
 const bookingSchema = new mongoose.Schema({
     periodId: { type: String, required: true, unique: true },
     facilities: { type: [facilitySchema] },
@@ -21,4 +23,4 @@ const bookingHistorySchema = new mongoose.Schema({
 });
 const BookingHistory = mongoose.model('BookingHistory', bookingHistorySchema);
 
-module.exports = { Booking, BookingHistory};
+module.exports = { Facility, Booking, BookingHistory};

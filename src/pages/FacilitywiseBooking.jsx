@@ -28,24 +28,8 @@ const periods = [
   { start: '15:55', end: '16:45' }
 ];
 
-const defaultFacilities = [
-  { name: 'KP-107', type: 'room' }, { name: 'KP-102', type: 'room' },
-  { name: 'KP-210', type: 'room' }, { name: 'KP-303', type: 'room' },
-  { name: 'KP-307', type: 'room' }, { name: 'KP-106', type: 'room' },
-  { name: 'KP-206', type: 'room' }, { name: 'KP-407', type: 'room' },
-  { name: 'KP-406', type: 'room' }, { name: 'R-1', type: 'room' },
-  { name: 'R-2', type: 'room' }, { name: 'R-3', type: 'room' },
-  { name: 'Ground Floor Lab', type: 'lab' },
-  { name: 'First Floor Lab', type: 'lab' },
-  { name: 'Second Floor Lab', type: 'lab' },
-  { name: 'Temenos Floor Lab', type: 'lab' },
-  { name: 'Projector1', type: 'projector' },
-  { name: 'Projector2', type: 'projector' },
-  { name: 'Projector3', type: 'projector' }
-];
-
 // ✅ Utility to check if a date is today or in the future
-function isFutureOrToday(dateStr,slotStartTime) {
+function isFutureOrToday(dateStr, slotStartTime) {
   dateStr = `${dateStr}T${slotStartTime}:00`;
   const dateStrObj = new Date(dateStr);
   const now = new Date();
@@ -56,6 +40,7 @@ const FacilityWiseBooking = () => {
   const [dateList, setDateList] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [facilityUsage, setFacilityUsage] = useState({});
+  const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,6 +61,19 @@ const FacilityWiseBooking = () => {
   }, []);
 
   useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const res = await axios.get('/api/allFacilities');
+        const allowed = ['room', 'lab', 'projector'];
+        setFacilities(res.data.filter(f => allowed.includes(f.type)));
+      } catch {
+        setFacilities([]);
+      }
+    };
+    fetchFacilities();
+  }, []);
+
+  useEffect(() => {
     const fetchUsage = async () => {
       if (!selectedDate) return;
       setLoading(true);
@@ -91,12 +89,11 @@ const FacilityWiseBooking = () => {
   }, [selectedDate]);
 
   const handleBook = async (facilityName, type, idx) => {
-    console.log('Booking:', selectedDate, idx, facilityName, type, user.userId);
     const payload = {
       date: selectedDate,
       slot: idx,
       facility: facilityName,
-      type: type,
+      type,
       userId: user.userId,
     };
 
@@ -131,6 +128,7 @@ const FacilityWiseBooking = () => {
       <h2 style={{ paddingTop: 96, marginBottom: 20, color: '#1a237e', textAlign: 'center' }}>
         Facility-wise Booking
       </h2>
+
       <div style={{ display: 'flex', overflowX: 'auto', gap: 10, padding: '8px 16px', whiteSpace: 'nowrap', marginBottom: 30 }}>
         {dateList.map(date => (
           <button
@@ -152,7 +150,7 @@ const FacilityWiseBooking = () => {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {defaultFacilities.map((fac, index) => {
+        {facilities.map((fac, index) => {
           const { name, type } = fac;
           const bgColor = typeColors[type] || '#f9f9f9';
           const borderColor = borderColors[type] || '#ccc';
@@ -169,8 +167,7 @@ const FacilityWiseBooking = () => {
                       Period {idx + 1}<br />
                       {p.start} - {p.end}<br />
                       {match ? match.bookedBy : 'Free'}<br />
-                      {/* ✅ Only allow booking if not booked and date is today or future */}
-                      {!match && isFutureOrToday(selectedDate,p.start) && (
+                      {!match && isFutureOrToday(selectedDate, p.start) && (
                         <button onClick={() => handleBook(name, type, idx)} style={{ marginTop: 4, padding: '2px 6px', fontSize: 12 }}>
                           Book
                         </button>
