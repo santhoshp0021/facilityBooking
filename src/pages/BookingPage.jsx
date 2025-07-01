@@ -39,6 +39,7 @@ export default function BookingPage({User}) {
           `http://localhost:5000/api/weekperiod-details?userId=${user.userId}`
         );
         let data = await res.json();
+        console.log(data);
         if (!Array.isArray(data)) data = [];
         // Use only this user's weektable for period details
         const todayPeriods = [];

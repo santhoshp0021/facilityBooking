@@ -89,6 +89,7 @@ export default function ProjectorListingPage() {
 
       alert('The projector is booked');
       await fetchProjectors();
+      navigate('/booking');
     } catch {
       alert('Booking failed');
       await fetchProjectors();

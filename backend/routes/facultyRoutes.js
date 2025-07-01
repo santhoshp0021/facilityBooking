@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Weektable = require('../models/Weektable');
 const { BookingHistory, Booking } = require('../models/BookingHistory');
-const Facility = require('../models/BookingHistory'); // ✅ dynamically fetched facilities
+const {Facility} = require('../models/BookingHistory'); // ✅ dynamically fetched facilities
 const { getWeekStart } = require('../utils');
 
 // GET available facilities for a user at a given date and slot
@@ -180,7 +180,6 @@ router.post("/facilities/book", async (req, res) => {
       usageDate: dateObj,
       facility: { name: facility, type, free: false }
     });
-
     if (dateObj >= weekstart && dateObj < weekEnd) {
       await Booking.findOneAndUpdate(
         { periodId },
@@ -197,7 +196,6 @@ router.post("/facilities/book", async (req, res) => {
         }
       );
     }
-
     res.json({ message: "Facility booked successfully" });
 
   } catch (err) {

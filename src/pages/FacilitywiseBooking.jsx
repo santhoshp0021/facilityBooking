@@ -163,7 +163,7 @@ const FacilityWiseBooking = () => {
                 {periods.map((p, idx) => {
                   const match = usage.find(u => u.periodNo === idx + 1);
                   return (
-                    <div key={idx} style={{ padding: '6px 10px', background: match ? '#f8d7da' : '#e0f2f1', borderRadius: 6, minWidth: 120 }}>
+                    <div key={idx} style={{ padding: '6px 10px', background: match ? '#f8d7da' : '#e0f2f1', borderRadius: 6, minWidth: 100 }}>
                       Period {idx + 1}<br />
                       {p.start} - {p.end}<br />
                       {match ? match.bookedBy : 'Free'}<br />

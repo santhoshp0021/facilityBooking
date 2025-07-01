@@ -75,7 +75,7 @@ router.post('/book-room', async (req, res) => {
       await booking.save();
 
       const dateObj = new Date();
-       dateObj.getDatesetHours(0,0,0,0);
+       dateObj.setHours(0,0,0,0);
       // Insert into booking history
       const userObj = await User.findOne({ userId });
       await BookingHistory.create({

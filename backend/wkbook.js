@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
 const Weektable = require("./models/Weektable");
 const { Booking } = require("./models/BookingHistory");
-const Facility = require('./models/BookingHistory'); // ✅ fetch from DB
+const {Facility} = require('./models/BookingHistory'); // ✅ fetch from DB
+const { getCurrentWeekStart } = require("./utils");
 
 async function updateBookingsForWeek() {
 
   // Step 1: Define exact weekStart date
-  const selectedWeekStart = new Date("2025-06-22T18:30:00.000Z");
+  const selectedWeekStart = getCurrentWeekStart();
 
   // Step 2: Utility to convert period index to day & slot
   const getDaySlotFromIndex = (index) => {
