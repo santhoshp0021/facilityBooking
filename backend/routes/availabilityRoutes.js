@@ -37,7 +37,7 @@ router.get('/rooms', async (req, res) => {
       }
     }
 
-    const allRooms = await Facility.find({ type: 'room' });
+    const allRooms = await Facility.find({ type: 'room', bookable: true });
     const rooms = allRooms.map(room => ({
       name: room.name,
       type: room.type,
@@ -84,7 +84,7 @@ router.get('/labs', async (req, res) => {
       }
     }
 
-    const allLabs = await Facility.find({ type: 'lab' });
+    const allLabs = await Facility.find({ type: 'lab', bookable: true });
     const labs = allLabs.map(lab => ({
       name: lab.name,
       type: lab.type,

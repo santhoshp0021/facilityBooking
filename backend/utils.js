@@ -119,7 +119,7 @@ async function ensureWeektablesForAllUsers() {
         }
       }
     }
-  }
+}
 
 // Update Booking facilities' free and bookedBy status based on this week's weektables
 async function syncFacilityStatusWithWeektables() {
@@ -172,9 +172,9 @@ async function syncFacilityStatusWithWeektables() {
         }
       }
     }
-  }
+}
   
-  async function ensureWeektablesForAllUsersCall() {
+async function ensureWeektablesForAllUsersCall() {
     const users = await User.find({});
     const weekStart = getWeekStartWithOffset(3);  // fixed week offset
   
@@ -236,7 +236,7 @@ async function syncFacilityStatusWithWeektables() {
         await weektable.save();
       }
     }
-  }
+}
   
   
 module.exports = { getWeekStart,getNextWeekStart, getNext4WeekStarts, getCurrentWeekStart, getWeekStartWithOffset, ensureWeektablesForAllUsers, ensureWeektablesForAllUsersCall, syncFacilityStatusWithWeektables };

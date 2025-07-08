@@ -2,261 +2,199 @@ import React, { useEffect, useState } from "react";
 import Banner from "../../components/Banner";
 import Sidebar from "../../components/Sidebar";
 
-const FacilityTypes = ["room", "lab", "projector"];
+const FacilityTypes = ["room", "lab", "projector", "hall"];
 
 export default function Facilities() {
   const [facilities, setFacilities] = useState([]);
-  const [newName, setNewName] = useState("");
-  const [newType, setNewType] = useState("room");
+  const [mode, setMode] = useState(""); // 'add', 'edit', 'delete'
+  const [newFacility, setNewFacility] = useState({ name: "", type: "room", bookable: true });
   const [editIdx, setEditIdx] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editType, setEditType] = useState("room");
+  const [editFacility, setEditFacility] = useState({ bookable: true });
 
-  // Fetch facilities
+  const fetchFacilities = async () => {
+    const res = await fetch("http://localhost:5000/api/Facilities");
+    const data = await res.json();
+    setFacilities(data);
+  };
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/facilities")
-      .then(res => res.json())
-      .then(setFacilities);
+    fetchFacilities();
   }, []);
 
-  // Add facility
   const addFacility = async () => {
-    if (!newName) return;
+    if (!newFacility.name) return;
     await fetch("http://localhost:5000/api/facilities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName, type: newType }),
+      body: JSON.stringify(newFacility),
     });
-    setNewName("");
-    setNewType("room");
-    fetch("http://localhost:5000/api/facilities")
-      .then(res => res.json())
-      .then(setFacilities);
+    setNewFacility({ name: "", type: "room", bookable: true });
+    fetchFacilities();
   };
 
-  // Start editing
   const startEdit = (idx) => {
     setEditIdx(idx);
-    setEditName(facilities[idx].name);
-    setEditType(facilities[idx].type);
+    setEditFacility({ bookable: facilities[idx].bookable });
   };
 
-  // Save edit
-  const saveEdit = async (idx) => {
-    await fetch(`http://localhost:5000/api/facilities/${idx}`, {
+  const saveEdit = async (id) => {
+    await fetch(`http://localhost:5000/api/facilities/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName, type: editType }),
+      body: JSON.stringify({ bookable: editFacility.bookable }),
     });
     setEditIdx(null);
-    fetch("http://localhost:5000/api/facilities")
-      .then(res => res.json())
-      .then(setFacilities);
+    fetchFacilities();
   };
 
-  // Delete facility
-  const deleteFacility = async (idx) => {
-    await fetch(`http://localhost:5000/api/facilities/${idx}`, {
+  const deleteFacility = async (id) => {
+    await fetch(`http://localhost:5000/api/facilities/${id}`, {
       method: "DELETE",
     });
-    fetch("http://localhost:5000/api/facilities")
-      .then(res => res.json())
-      .then(setFacilities);
+    fetchFacilities();
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "bisque",
-        minHeight: "100vh",
-        fontFamily: "Segoe UI, Arial, sans-serif",
-        overflow: "auto",
-        zIndex: 1,
-      }}
-    >
-      <Banner/>
-      <Sidebar/>
-      <h2 style={{ paddingTop:96,textAlign: "center", color: "#7a4f01", marginTop: 32 }}>Facilities</h2>
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-        <table
-          style={{
-            borderCollapse: "collapse",
-            background: "#fff8ee",
-            boxShadow: "0 2px 12px #e0c9a6",
-            borderRadius: 12,
-            overflow: "hidden",
-            minWidth: 420,
-            width: "80vw",
-            maxWidth: 900,
-          }}
-        >
-          <thead>
-            <tr style={{ background: "#ffe4c4" }}>
-              <th style={{ padding: 12, fontWeight: 600 }}>#</th>
-              <th style={{ padding: 12, fontWeight: 600 }}>Name</th>
-              <th style={{ padding: 12, fontWeight: 600 }}>Type</th>
-              <th style={{ padding: 12, fontWeight: 600 }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {facilities.map((f, idx) =>
-              editIdx === idx ? (
-                <tr key={idx} style={{ background: "#fff3e0" }}>
-                  <td style={{ padding: 10 }}>{idx + 1}</td>
-                  <td style={{ padding: 10 }}>
+    <div style={{ padding: 32, background: "#fdf6e3", minHeight: "100vh", width: "100vw" }}>
+      <Banner />
+      <Sidebar />
+      <h2 style={{ marginTop: 100, textAlign: "center", color: "#7a4f01" }}>Facility Management</h2>
+
+      <div style={{ display: "flex", justifyContent: "center", gap: 20, margin: 24 }}>
+        <button onClick={() => setMode("add")} style={buttonStyle}>Add Facility</button>
+        <button onClick={() => setMode("edit")} style={buttonStyle}>Edit Facility</button>
+        <button onClick={() => setMode("delete")} style={buttonStyle}>Delete Facility</button>
+      </div>
+
+      {mode && (
+        <div style={{ display: "flex", justifyContent: "center", overflowX: "auto" }}>
+          <table style={{ ...tableStyle, width: "90%", maxWidth: "1200px" }}>
+            <thead>
+              <tr style={{ background: "#ffe4c4" }}>
+                <th>#</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Bookable</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mode !== "add" && facilities.map((f, idx) => (
+                <tr key={f._id} style={{ background: idx % 2 ? "#fff8ee" : "#fff3e0" }}>
+                  <td>{idx + 1}</td>
+                  <td>{f.name}</td>
+                  <td>{f.type}</td>
+                  <td>
+                    {mode === "edit" && editIdx === idx ? (
+                      <input
+                        type="checkbox"
+                        checked={editFacility.bookable}
+                        onChange={(e) => setEditFacility({ bookable: e.target.checked })}
+                      />
+                    ) : (
+                      f.bookable ? "Yes" : "No"
+                    )}
+                  </td>
+                  <td>
+                    {mode === "edit" ? (
+                      editIdx === idx ? (
+                        <>
+                          <button onClick={() => saveEdit(f._id)} style={saveBtn}>Save</button>
+                          <button onClick={() => setEditIdx(null)} style={cancelBtn}>Cancel</button>
+                        </>
+                      ) : (
+                        <button onClick={() => startEdit(idx)} style={editBtn}>Edit</button>
+                      )
+                    ) : mode === "delete" ? (
+                      <button onClick={() => deleteFacility(f._id)} style={deleteBtn}>Delete</button>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+
+              {mode === "add" && (
+                <tr style={{ background: "#ffe4c4" }}>
+                  <td>New</td>
+                  <td>
                     <input
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      style={{
-                        padding: 6,
-                        borderRadius: 4,
-                        border: "1px solid #e0c9a6",
-                        width: "90%",
-                      }}
+                      value={newFacility.name}
+                      onChange={(e) => setNewFacility({ ...newFacility, name: e.target.value })}
                     />
                   </td>
-                  <td style={{ padding: 10 }}>
+                  <td>
                     <select
-                      value={editType}
-                      onChange={e => setEditType(e.target.value)}
-                      style={{
-                        padding: 6,
-                        borderRadius: 4,
-                        border: "1px solid #e0c9a6",
-                        width: "90%",
-                      }}
+                      value={newFacility.type}
+                      onChange={(e) => setNewFacility({ ...newFacility, type: e.target.value })}
                     >
-                      {FacilityTypes.map(t => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
+                      {FacilityTypes.map((t) => (
+                        <option key={t} value={t}>{t}</option>
                       ))}
                     </select>
                   </td>
-                  <td style={{ padding: 10 }}>
-                    <button
-                      onClick={() => saveEdit(idx)}
-                      style={{
-                        background: "#ffb74d",
-                        border: "none",
-                        borderRadius: 4,
-                        padding: "6px 14px",
-                        marginRight: 6,
-                        color: "#fff",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditIdx(null)}
-                      style={{
-                        background: "#e57373",
-                        border: "none",
-                        borderRadius: 4,
-                        padding: "6px 14px",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Cancel
-                    </button>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={newFacility.bookable}
+                      onChange={(e) => setNewFacility({ ...newFacility, bookable: e.target.checked })}
+                    />
+                  </td>
+                  <td>
+                    <button onClick={addFacility} style={addBtn}>Add</button>
                   </td>
                 </tr>
-              ) : (
-                <tr key={idx} style={{ background: idx % 2 ? "#fff8ee" : "#fff3e0" }}>
-                  <td style={{ padding: 10 }}>{idx + 1}</td>
-                  <td style={{ padding: 10 }}>{f.name}</td>
-                  <td style={{ padding: 10 }}>{f.type}</td>
-                  <td style={{ padding: 10 }}>
-                    <button
-                      onClick={() => startEdit(idx)}
-                      style={{
-                        background: "#81c784",
-                        border: "none",
-                        borderRadius: 4,
-                        padding: "6px 14px",
-                        marginRight: 6,
-                        color: "#fff",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteFacility(idx)}
-                      style={{
-                        background: "#e57373",
-                        border: "none",
-                        borderRadius: 4,
-                        padding: "6px 14px",
-                        color: "#fff",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              )
-            )}
-            <tr style={{ background: "#ffe4c4" }}>
-              <td style={{ padding: 10, fontWeight: 600 }}>New</td>
-              <td style={{ padding: 10 }}>
-                <input
-                  value={newName}
-                  onChange={e => setNewName(e.target.value)}
-                  style={{
-                    padding: 6,
-                    borderRadius: 4,
-                    border: "1px solid #e0c9a6",
-                    width: "90%",
-                  }}
-                />
-              </td>
-              <td style={{ padding: 10 }}>
-                <select
-                  value={newType}
-                  onChange={e => setNewType(e.target.value)}
-                  style={{
-                    padding: 6,
-                    borderRadius: 4,
-                    border: "1px solid #e0c9a6",
-                    width: "90%",
-                  }}
-                >
-                  {FacilityTypes.map(t => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td style={{ padding: 10 }}>
-                <button
-                  onClick={addFacility}
-                  style={{
-                    background: "#ffb74d",
-                    border: "none",
-                    borderRadius: 4,
-                    padding: "6px 18px",
-                    color: "#fff",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                  }}
-                >
-                  Add
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
-    );
+  );
 }
+
+const tableStyle = {
+  borderCollapse: "collapse",
+  background: "#fff",
+  borderRadius: 12,
+  overflow: "hidden",
+  boxShadow: "0 2px 12px #e0c9a6",
+};
+
+const buttonStyle = {
+  padding: "10px 20px",
+  background: "#ffb74d",
+  color: "#fff",
+  border: "none",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const editBtn = {
+  background: "#4caf50",
+  color: "#fff",
+  padding: "6px 12px",
+  marginRight: 6,
+  border: "none",
+  borderRadius: 4,
+  cursor: "pointer",
+};
+
+const saveBtn = {
+  ...editBtn,
+  background: "#0288d1",
+};
+
+const cancelBtn = {
+  ...editBtn,
+  background: "#f44336",
+};
+
+const deleteBtn = {
+  ...editBtn,
+  background: "#d32f2f",
+};
+
+const addBtn = {
+  ...editBtn,
+  background: "#ff9800",
+};

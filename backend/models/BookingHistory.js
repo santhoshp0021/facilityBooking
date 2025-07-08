@@ -4,7 +4,8 @@ const facilitySchema = new mongoose.Schema({
     name: { type: String, required: true },
     type: { type: String, required: true },
     free: { type: Boolean, default: true },
-    bookedBy:{type:String,default:''}
+    bookedBy:{type:String,default:''},
+    bookable: {type: Boolean, default: true}
 });
 const Facility = mongoose.model('Facility', facilitySchema);
 

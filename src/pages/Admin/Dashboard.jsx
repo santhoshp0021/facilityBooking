@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Sidebar from '../../components/Sidebar';
 import Banner from '../../components/Banner';
+import ReactDatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const typeColors = {
   room: '#e8f0fe',
@@ -45,23 +47,31 @@ function generateTimeSlots(start = "08:00", end = "17:00", interval = 15) {
   return slots;
 }
 
+function formatDateLocal(dateObj) {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 const Dashboard = () => {
   const [dateList, setDateList] = useState([]);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
   const [facilityUsage, setFacilityUsage] = useState({});
   const [facilities, setFacilities] = useState([]);
+  const [filteredFacilities, setFilteredFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedType, setSelectedType] = useState('');
 
   useEffect(() => {
     const fetchDates = async () => {
       try {
         const res = await axios.get('/api/admin/available-week-dates');
         setDateList(res.data);
-        if (res.data.length > 0) {
-          const todayStr = new Date().toISOString().split('T')[0];
-          const todayExists = res.data.includes(todayStr);
-          setSelectedDate(todayExists ? todayStr : res.data[0]);
-        }
+        const todayStr = formatDateLocal(new Date());
+        const todayExists = res.data.includes(todayStr);
+        const initialDate = todayExists ? todayStr : res.data[0];
+        setSelectedDate(new Date(initialDate));
       } catch {
         setDateList([]);
       }
@@ -74,6 +84,7 @@ const Dashboard = () => {
       try {
         const res = await axios.get('/api/allFacilities');
         setFacilities(res.data);
+        setFilteredFacilities(res.data);
       } catch {
         setFacilities([]);
       }
@@ -86,7 +97,9 @@ const Dashboard = () => {
       if (!selectedDate) return;
       setLoading(true);
       try {
-        const res = await axios.get('/api/admin/usage-status', { params: { date: selectedDate } });
+        const res = await axios.get('/api/admin/usage-status', {
+          params: { date: formatDateLocal(selectedDate) }
+        });
         setFacilityUsage(res.data);
       } catch {
         setFacilityUsage({});
@@ -98,16 +111,14 @@ const Dashboard = () => {
 
   const handleFreePeriod = async (facilityName, type, periodNo, userId) => {
     try {
-      const res = await axios.post('/api/admin/free-slot-period', {
-        facilityName,
-        type,
-        date: selectedDate,
-        periodNo,
-        userId
+      await axios.post('/api/admin/free-slot-period', {
+        facilityName, type, date: formatDateLocal(selectedDate), periodNo, userId
       });
-      alert(res.data.message || 'Slot freed successfully');
-      const usageRes = await axios.get('/api/admin/usage-status', { params: { date: selectedDate } });
+      const usageRes = await axios.get('/api/admin/usage-status', {
+        params: { date: formatDateLocal(selectedDate) }
+      });
       setFacilityUsage(usageRes.data);
+      alert('Slot freed successfully');
     } catch (err) {
       console.error(err);
       alert('Failed to free the slot');
@@ -116,111 +127,127 @@ const Dashboard = () => {
 
   const handleFreeHall = async (hallName, startTime, endTime, userId) => {
     try {
-      const res = await axios.post('/api/admin/free-slot-hall', {
-        hallName,
-        date: selectedDate,
-        startTime,
-        endTime,
-        userId
+      await axios.post('/api/admin/free-slot-hall', {
+        hallName, date: formatDateLocal(selectedDate), startTime, endTime, userId
       });
-      alert(res.data.message || 'Slot freed successfully');
-      const usageRes = await axios.get('/api/admin/usage-status', { params: { date: selectedDate } });
+      const usageRes = await axios.get('/api/admin/usage-status', {
+        params: { date: formatDateLocal(selectedDate) }
+      });
       setFacilityUsage(usageRes.data);
+      alert('Slot freed successfully');
     } catch (err) {
       console.error(err);
       alert('Failed to free the slot');
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  const handleTypeChange = (value) => {
+    setSelectedType(value);
+    let filtered = [];
+
+    if (value === 'kp') {
+      filtered = facilities.filter(f => f.type === 'room' && f.name.startsWith('KP'));
+    } else if (value === 'dept') {
+      filtered = facilities.filter(f => f.type === 'room' && !f.name.startsWith('KP'));
+    } else if (value === 'lab') {
+      filtered = facilities.filter(f => f.type === 'lab');
+    } else if (value === 'projector') {
+      filtered = facilities.filter(f => f.type === 'projector');
+    } else if (value === 'hall') {
+      filtered = facilities.filter(f => f.type === 'hall');
+    } else {
+      filtered = facilities;
+    }
+
+    setFilteredFacilities(filtered);
+  };
+
+  if (loading || !selectedDate) return <div>Loading...</div>;
 
   const hallSlots = generateTimeSlots();
+  const formattedDate = formatDateLocal(selectedDate);
 
   function isFutureOrToday(dateStr, slotStartTime) {
-    dateStr = `${dateStr}T${slotStartTime}:00`;
-    const dateStrObj = new Date(dateStr);
+    const dateTime = new Date(`${dateStr}T${slotStartTime}:00`);
     const now = new Date();
-    return dateStrObj >= now;
+    return dateTime >= now;
   }
 
   return (
-    <div style={{ padding: 32, minHeight: '100vh', background: '#f5f5dc', width: '100vw', boxSizing: 'border-box' }}>
+    <div style={{ padding: 32, minHeight: '100vh', background: '#f5f5dc', width: '100vw' }}>
       <Banner />
       <Sidebar />
-      <h2 style={{ paddingTop: 96, marginBottom: 20, color: '#1a237e', letterSpacing: 1, fontWeight: 700, textAlign: 'center' }}>
+      <h2 style={{ paddingTop: 96, marginBottom: 20, color: '#1a237e', fontWeight: 700, textAlign: 'center' }}>
         Admin Dashboard - Facility Usage
       </h2>
 
-      <div style={{ display: 'flex', overflowX: 'auto', gap: 10, padding: '8px 16px', whiteSpace: 'nowrap', marginBottom: 30 }}>
-        {dateList.map(date => (
-          <button
-            key={date}
-            onClick={() => setSelectedDate(date)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 6,
-              border: '1px solid #7a5c1c',
-              background: date === selectedDate ? '#7a5c1c' : '#fff',
-              color: date === selectedDate ? '#fff' : '#7a5c1c',
-              cursor: 'pointer',
-              minWidth: 100
-            }}
+      {/* Calendar & Dropdown */}
+      <div style={{ display: 'flex', alignItems: 'start', gap: 40, marginBottom: 30, paddingLeft: 16 }}>
+        <div>
+          <label style={{ fontWeight: 'bold' }}>Select Date:</label><br />
+          <ReactDatePicker
+            selected={selectedDate}
+            onChange={(date) => setSelectedDate(date)}
+            includeDates={dateList.map(d => new Date(d))}
+            inline
+          />
+        </div>
+
+        <div>
+          <label style={{ fontWeight: 'bold' }}>Facility Type:</label><br />
+          <select
+            value={selectedType}
+            onChange={(e) => handleTypeChange(e.target.value)}
+            style={{ padding: 8, width: 200, marginTop: 8 }}
           >
-            {date}
-          </button>
-        ))}
+            <option value="">All</option>
+            <option value="kp">KP Room</option>
+            <option value="dept">Department Room</option>
+            <option value="lab">Lab</option>
+            <option value="projector">Projector</option>
+            <option value="hall">Hall</option>
+          </select>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 32, width: '100%' }}>
-        {facilities.map(facility => {
+      {/* Facility Listing */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+        {filteredFacilities.map(facility => {
           const { name, type } = facility;
-          const usageData = facilityUsage[name] || { name, type, usage: [] };
-          const { usage } = usageData;
-          const bgColor = typeColors[type] || '#f9f9f9';
-          const borderColor = borderColors[type] || '#ccc';
+          const usageData = facilityUsage[name] || { usage: [] };
+          const usage = usageData.usage;
           const timeSlots = type === 'hall' ? hallSlots : periods;
 
           return (
             <div
               key={name}
               style={{
-                background: bgColor,
-                border: `2.5px solid ${borderColor}`,
+                background: typeColors[type],
+                border: `2.5px solid ${borderColors[type]}`,
                 borderRadius: 18,
                 padding: 20,
-                width: '100%',
                 boxShadow: '0 4px 16px rgb(224, 224, 224)'
               }}
             >
-              <h3 style={{ color: borderColor, fontWeight: 600 }}>{name}</h3>
-              <div style={{ marginBottom: 8 }}>
-                <span style={{ background: borderColor, color: '#fff', borderRadius: 8, padding: '4px 14px', fontSize: '1em', fontWeight: 500 }}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </span>
-              </div>
-              <div style={{ fontWeight: 500, color: '#444', marginBottom: 6 }}>
-                Usage:
-              </div>
+              <h3 style={{ color: borderColors[type] }}>{name}</h3>
+              <div style={{ fontWeight: 500, color: '#444', marginBottom: 6 }}>Usage:</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {timeSlots.map((slot, i) => {
-                  const match = (usage || []).find(u => u.startTime <= slot.start && u.endTime >= slot.end);
+                  const match = usage.find(u => u.startTime <= slot.start && u.endTime >= slot.end);
                   return (
-                    <div
-                      key={i}
-                      style={{
-                        padding: '15px 6px',
-                        fontSize: 12,
-                        background: match ? '#f8d7da' : 'rgb(146, 237, 123)',
-                        borderRadius: 4,
-                        minWidth: 100,
-                        textAlign: 'center',
-                        position: 'relative'
-                      }}
-                    >
-                      {slot.start} - {slot.end} <br />
+                    <div key={i} style={{
+                      padding: '15px 6px',
+                      fontSize: 12,
+                      background: match ? '#f8d7da' : 'rgb(146, 237, 123)',
+                      borderRadius: 4,
+                      minWidth: 100,
+                      textAlign: 'center',
+                      position: 'relative'
+                    }}>
+                      {slot.start} - {slot.end}<br />
                       {match ? (type === 'hall' ? `${match.bookedBy}:${match.eventName}` : match.bookedBy) : 'Free'}
 
-                      {match && isFutureOrToday(selectedDate, slot.start) && (
+                      {match && isFutureOrToday(formattedDate, slot.start) && (
                         <button
                           style={{
                             position: 'absolute',
