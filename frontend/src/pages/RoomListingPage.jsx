@@ -107,54 +107,6 @@ export default function RoomListingPage({User}) {
     }
   };
 
-  // Freeing logic for rooms and labs
-  const handleFree = async (room) => {
-    if (room.free) {
-      alert('Room is already free.');
-      return;
-    }
-    // If room has no roomNo, treat as lab freeing
-    if (!room.roomNo) {
-      // Find the lab booked by this user for this period
-      try {
-        // Fetch weektable record to get lab name
-        const res = await fetch(`http://localhost:5000/api/weektable/lab-booking?userId=${user.userId}&periodId=${period.periodId}`);
-        if (!res.ok) {
-          alert('Could not find lab booking for this user and period.');
-          return;
-        }
-        const data = await res.json();
-        const labName = data.lab;
-        if (!labName) {
-          alert('No lab booking found for this user and period.');
-          return;
-        }
-        // Free the lab using labName and periodId
-        const freeRes = await fetch(`http://localhost:5000/api/labs/free-by-name`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            labName,
-            periodId: period.periodId,
-            userId: user.userId
-          })
-        });
-        if (!freeRes.ok) {
-          alert('Failed to free the lab.');
-          return;
-        }
-        alert('Lab freed!');
-        fetchRooms();
-      } catch (err) {
-        alert('Error freeing lab.');
-      }
-      return;
-    }
-    // Normal room freeing
-    await fetch(`http://localhost:5000/api/facilities/${room._id}/free`, { method: 'POST' });
-    fetchRooms();
-  };
-
   return (
     <div style={{
       paddingTop:96,

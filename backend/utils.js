@@ -2,7 +2,6 @@ const User =  require('./models/User');
 const Weektable =  require('./models/Weektable');
 const Timetable =  require('./models/Timetable');
 const Period =  require('./models/Period');
-const { Booking } = require('./models/BookingHistory');
 // Helper to get next 4 Monday dates
 function getNext4WeekStarts() {
     const weeks = [];
@@ -55,8 +54,7 @@ function getWeekStartWithOffset(offset = 0) {
 
 async function ensureWeektablesForAllUsers() {
     const users = await User.find({});
-    //console.log(users);
-    for (let weekOffset = 0; weekOffset < 4; weekOffset++) {
+    for (let weekOffset = 0; weekOffset < 5; weekOffset++) {
       const weekStart = getWeekStartWithOffset(weekOffset);
   
       for (const user of users) {
@@ -121,122 +119,4 @@ async function ensureWeektablesForAllUsers() {
     }
 }
 
-// Update Booking facilities' free and bookedBy status based on this week's weektables
-async function syncFacilityStatusWithWeektables() {
-    const thisMonday = getCurrentWeekStart();
-    // Find all weektables for this week
-    const weektables = await Weektable.find({ weekStart: thisMonday });
-  
-    for (const weektable of weektables) {
-      if (!Array.isArray(weektable.periods)) continue;
-      for (const period of weektable.periods) {
-        // Find the Booking record for this periodId
-        const booking = await Booking.findOne({ periodId: period.periodId });
-        if (booking && Array.isArray(booking.facilities)) {
-          let updated = false;
-          for (const fac of booking.facilities) {
-            // Update free status for room
-            if (
-              fac.type === 'room' &&
-              period.roomNo &&
-              namesMatch(fac.name, period.roomNo)
-            ) {
-              fac.free = period.free;
-              fac.bookedBy = weektable.userId;
-              updated = true;
-            }
-            // Update free status for lab
-            if (
-              fac.type === 'lab' &&
-              period.lab &&
-              namesMatch(fac.name, period.lab)
-            ) {
-              fac.free = period.free;
-              fac.bookedBy = weektable.userId;
-              updated = true;
-            }
-            // Update free status for projector
-            if (
-              fac.type === 'projector' &&
-              period.projector &&
-              namesMatch(fac.name, period.projector)
-            ) {
-              fac.free = period.free;
-              fac.bookedBy = weektable.userId;
-              updated = true;
-            }
-          }
-          if (updated) {
-            await booking.save();
-          }
-        }
-      }
-    }
-}
-  
-async function ensureWeektablesForAllUsersCall() {
-    const users = await User.find({});
-    const weekStart = getWeekStartWithOffset(3);  // fixed week offset
-  
-    const startTimes = ["08:30", "09:30", "10:30", "11:25", "13:10", "14:05", "15:00", "15:55"];
-    const endTimes   = ["09:25", "10:15", "11:20", "12:15", "14:00", "14:55", "15:50", "16:45"];
-  
-    for (const user of users) {
-      let weektable = await Weektable.findOne({ userId: user.userId, weekStart });
-  
-      const timetable = await Timetable.findOne({ userId: user.userId });
-  
-      let periods = [];
-  
-      if (timetable && Array.isArray(timetable.periods) && timetable.periods.length > 0) {
-        const periodDocs = await Period.find({ _id: { $in: timetable.periods } });
-  
-        periods = periodDocs.map(period => ({
-          periodNo: period.periodNo,
-          day: period.day,
-          periodId: period.periodId,
-          free: period.free,
-          roomNo: period.roomNo || '',
-          courseCode: period.courseCode || '',
-          staffName: period.staffName || '',
-          lab: period.lab || '',
-          projector: "",
-          startTime: period.startTime || '',
-          endTime: period.endTime || ''
-        }));
-      } else {
-        // Fallback: generate default 40 period entries
-        for (let day = 1; day <= 5; day++) {
-          for (let periodNo = 1; periodNo < 9; periodNo++) {
-            periods.push({
-              periodNo,
-              day,
-              periodId: `${periodNo}-${day}`,
-              free: true,
-              roomNo: '',
-              courseCode: '',
-              staffName: '',
-              lab: '',
-              projector: '',
-              startTime: startTimes[periodNo],
-              endTime: endTimes[periodNo]
-            });
-          }
-        }
-      }
-  
-      if (!weektable) {
-        await Weektable.create({
-          userId: user.userId,
-          periods,
-          weekStart
-        });
-      } else {
-        weektable.periods = periods;
-        await weektable.save();
-      }
-    }
-}
-  
-  
-module.exports = { getWeekStart,getNextWeekStart, getNext4WeekStarts, getCurrentWeekStart, getWeekStartWithOffset, ensureWeektablesForAllUsers, ensureWeektablesForAllUsersCall, syncFacilityStatusWithWeektables };
+module.exports = { getWeekStart,getNextWeekStart, getNext4WeekStarts, getCurrentWeekStart, getWeekStartWithOffset, ensureWeektablesForAllUsers };

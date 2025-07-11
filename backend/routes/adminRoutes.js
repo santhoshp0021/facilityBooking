@@ -2,7 +2,7 @@ const express = require('express');
 const nodemailer = require('nodemailer');
 const router = express.Router();
 const User = require('../models/User');
-const {Booking, BookingHistory} =require('../models/BookingHistory');
+const { BookingHistory} =require('../models/BookingHistory');
 const Weektable = require('../models/Weektable');
 const HallRequest = require('../models/HallRequest');
 const {getWeekStart} = require('../utils');
@@ -168,20 +168,6 @@ router.post('/free-slot-period', async (req, res) => {
       await transporter.sendMail(mailOptions);
       res.json({ message: 'Slot freed and user notified.' });
       if (dateObj < weekStart || dateObj >= weekEnd) return
-      // 1. Free the slot in Booking
-      const result = await Booking.findOneAndUpdate(
-        { periodId },
-        {
-          $set: {
-            "facilities.$[f].free": true,
-            "facilities.$[f].bookedBy": ""
-          }
-        },
-        {
-          arrayFilters: [{ "f.name": facilityName, "f.type": type }],
-          new: true
-        }
-      );
       
     } catch (err) {
       console.error('Error freeing slot:', err);
