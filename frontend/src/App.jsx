@@ -15,7 +15,7 @@ import EnrollmentPage from  './pages/Admin/EnrollmentPage';
 import TimeTable from './pages/Admin/TimeTable';
 import Facilities from './pages/Admin/Facilities';
 import Register from './pages/Admin/Register';
-import PeriodwiseBooking from './pages/PeriodwiseBooking';
+//import PeriodwiseBooking from './pages/PeriodwiseBooking';
 import FacilitywiseBooking from './pages/FacilitywiseBooking';
 function App() {
   const [user, setUser] = useState(() => {
@@ -51,7 +51,7 @@ function App() {
                 <Route path="/messages" element={<Messages User={user} />} />
                 <Route path="/history" element={<Historypage User={user} />} />
                 <Route path="dashboard" element={<Dashboard User={user} />} />
-                <Route path="/periodwiseBooking" element={<PeriodwiseBooking User={user} />} />
+                {/* <Route path="/periodwiseBooking" element={<PeriodwiseBooking User={user} />} /> */}
                 <Route path="/facilitywiseBooking" element={<FacilitywiseBooking User={user} />} />
                 <Route path="/enrollment" element={<EnrollmentPage User={user} />} />
                 <Route path='/timetable' element={<TimeTable User={user} />} />
