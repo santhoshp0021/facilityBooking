@@ -10,6 +10,7 @@ function getTodayDayNumber() {
 }
 // ✅ Utility to check if a date is today or in the future
 function isFutureOrToday(slotStartTime) {
+  return true;
   var date = new Date().toISOString();
   const now = new Date();
   var [dateStr,time] = date.split('T');

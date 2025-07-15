@@ -188,32 +188,6 @@ app.post('/api/timetable', async (req, res) => {
   }
 });
 
-// API to get all projector bookings for the current week for a user
-app.get('/api/projector-bookings', async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: 'userId required' });
-
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const weekStart = getCurrentWeekStart();
-    const weektable = await Weektable.findOne({
-      userId: user.userId, // string
-      weekStart: weekStart
-    });
-
-    if (!weektable || !Array.isArray(weektable.periods)) return res.json([]);
-
-    // Only periods where projector is not empty string
-    const projectorPeriods = weektable.periods.filter(period => period.projector && period.projector !== "");
-
-    res.json(projectorPeriods);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching projector bookings', details: err.message });
-  }
-});
-
 app.listen(5000, () => {
   console.log('Server running on port 5000');
 });

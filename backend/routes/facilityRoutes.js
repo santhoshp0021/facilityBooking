@@ -1,10 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const {Facility} = require('../models/BookingHistory');
-// GET all facilities (rooms, labs, projectors) for reference
-// router.get('/facilities', (req, res) => {
-//     res.json(facilities);
-// });
 
 // GET all available facilities
 router.get('/allFacilities', async (req, res) => {
