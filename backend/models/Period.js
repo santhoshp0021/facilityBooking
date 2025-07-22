@@ -6,11 +6,11 @@ const periodSchema = new mongoose.Schema({
   periodId: { type: String, required: true },
   free: { type: Boolean, default: true },
   roomNo: { type: String },
-  courseCode: { type: String }, // <-- fix typo here
+  courseCode: { type: String }, 
   staffName: { type: String },
   lab: { type: String },
-  startTime:{ type: String, required: true }, // e.g. "10:00 AM"
-  endTime:{ type: String, required: true }, // e.g. "11:00 AM"
+  startTime:{ type: String, required: true }, 
+  endTime:{ type: String, required: true }, 
 });
 const Period = mongoose.model('Period', periodSchema);
 

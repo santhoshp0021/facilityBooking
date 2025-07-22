@@ -9,7 +9,7 @@ export default function Register() {
   const [form, setForm] = useState({
     userId: '',
     password: '',
-    role: 'student',
+    role: 'student_rep',
     email: ''
   });
   const [message, setMessage] = useState('');
@@ -74,7 +74,7 @@ export default function Register() {
             <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} required />
             <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
             <select name="role" value={form.role} onChange={handleChange} required>
-              <option value="student">Student</option>
+              {/* <option value="student">Student</option> */}
               <option value="student_rep">Student Rep</option>
               <option value="faculty">Faculty</option>
               <option value="csea_member">CSEA Member</option>

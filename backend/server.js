@@ -15,9 +15,11 @@ const hallRoutes = require('./routes/hallRoutes');
 const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const timetableRoutes = require('./routes/timetableRoutes');
 const { getCurrentWeekStart,ensureWeektablesForAllUsers } = require('./utils');
 
 const express = require('express');
+const bcrypt = require('bcrypt'); 
 const cors = require('cors');
 const app = express();
 
@@ -31,6 +33,7 @@ app.use('/api/enrollment',enrollmentRoutes);
 app.use('/api',availabilityRoutes);
 app.use('/api',bookRoutes);
 app.use('/api/admin',adminRoutes);
+app.use('/api/timetable',timetableRoutes);
 
 // Connect to MongoDB
 mongoose.connect('mongodb+srv://Vishva06:vishva2006@cluster0.1odrrkw.mongodb.net/facilitydb', {
@@ -41,46 +44,71 @@ mongoose.connect('mongodb+srv://Vishva06:vishva2006@cluster0.1odrrkw.mongodb.net
 // --- Call this on server startup ---
 ensureWeektablesForAllUsers().then(() => {}).catch(err => {console.error('Error ensuring weektables:', err);});
 
-// Login route to log username and password into userschema
+// Login route to verify username and password
 app.post('/api/login', async (req, res) => {
-   const { userId, password } = req.body;
+  const { userId, password } = req.body;
+
   if (!userId || !password) {
     return res.status(400).json({ error: 'userId and password required' });
   }
   try {
-    const user = await User.findOne({ userId, password });
-    if (user) {
-      res.json({ success: true, userId: user.userId, role: user.role });
-    } else {
-      res.status(401).json({ error: 'Invalid userId or password' });
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid userId or password' });
     }
+    if (user.role === 'admin'){
+      if(password === user.password){
+        return res.json({ success: true, userId: user.userId, role: user.role });
+      }
+      else{
+        return res.status(401).json({ error: 'Invalid userId or password' });
+      }
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid userId or password' });
+    }
+
+    res.json({ success: true, userId: user.userId, role: user.role });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Login failed', details: err.message });
   }
 });
 
-//Register 
+
+//Register
 app.post('/api/register', async (req, res) => {
-  const {  password, role, userId, email } = req.body;
+  const { password, role, userId, email } = req.body;
   try {
     const existingUser = await User.findOne({ userId });
     if (existingUser) {
       return res.status(400).json({ message: 'userId already registered' });
     }
+
+    // Hash the password using bcrypt
+    const salt = await bcrypt.genSalt(10); // or use 12 rounds
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = new User({  
-      password,
+      password: hashedPassword,
       role,
       userId,
       email
     });
+
     await newUser.save();
     ensureWeektablesForAllUsers();
+
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // API to get all periods for the current week for a user
 app.get('/api/weekperiod-details', async (req, res) => {

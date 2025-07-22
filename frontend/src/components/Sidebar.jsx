@@ -72,7 +72,7 @@ export default function Sidebar() {
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}><li>
           <Link to="/home" onClick={() => setOpen(false)} style={linkStyle}>Home</Link>
           </li>
-          {['secretary'].includes(user.role) && (
+          {['secretary','csea_member'].includes(user.role) && (
             <li>
               <Link to="/facilitywiseBooking" onClick={() => setOpen(false)} style={linkStyle}>Facilitywise Booking</Link>
               <Link to="/halls" onClick={() => setOpen(false)} style={linkStyle}>Halls</Link>
@@ -87,7 +87,7 @@ export default function Sidebar() {
               <Link to="/messages" onClick={() => setOpen(false)} style={linkStyle}>Messages</Link>
             </li>
           )}
-          {user.role === 'student' && (
+          {user.role === 'student_rep' && (
             <li>
               <Link to="/booking" onClick={() => setOpen(false)} style={linkStyle}>Bookings</Link>
             </li>
@@ -107,9 +107,9 @@ export default function Sidebar() {
               <li>
                 <Link to="/facilities" onClick={() => setOpen(false)} style={linkStyle}>Facilities</Link>
               </li> 
-              <li>
+              {/* <li>
                 <Link to="/enrollment" onClick={() => setOpen(false)} style={linkStyle}>Enrollment</Link>
-              </li>
+              </li>*/}
                 <li>
                 <Link to="/timetable" onClick={() => setOpen(false)} style={linkStyle}>TimeTable</Link>
               </li>

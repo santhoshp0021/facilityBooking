@@ -12,7 +12,8 @@ router.get('/allFacilities', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch facilities' });
   }
 });
-// GET /api/facilities/projectors
+
+// GET projectors
 router.get("/facilities/projectors", async (req, res) => {
   try {
     const projectors = await Facility.find({ type: "projector", bookable:"true" }).select("name type -_id");
@@ -22,6 +23,7 @@ router.get("/facilities/projectors", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 // Get all facilities
 router.get("/Facilities", async (req, res) => {
   try {
@@ -31,6 +33,7 @@ router.get("/Facilities", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch facilities" });
   }
 });
+
 // Add a new facility
 router.post("/facilities", async (req, res) => {
   try {
@@ -69,33 +72,5 @@ router.delete("/facilities/:id", async (req, res) => {
     res.status(400).json({ error: "Failed to delete facility", details: err.message });
   }
 });
-
-
-
-//   //POST a facility
-// router.post('/facilities', (req, res) => {
-//     const { name, type } = req.body;
-//     if (!name || !type) return res.status(400).json({ error: 'name and type required' });
-//     facilities.push({ name, type, free: true, bookedBy: '' });
-//     res.json({ success: true, facilities });
-// });
-  
-//   // Update a facility by index
-// router.put('/facilities/:index', (req, res) => {
-//     const idx = parseInt(req.params.index, 10);
-//     if (isNaN(idx) || idx < 0 || idx >= facilities.length) return res.status(404).json({ error: 'Facility not found' });
-//     const { name, type } = req.body;
-//     if (!name || !type) return res.status(400).json({ error: 'name and type required' });
-//     facilities[idx] = { ...facilities[idx], name, type };
-//     res.json({ success: true, facilities });
-// });
-  
-//   // Delete a facility by index
-// router.delete('/facilities/:index', (req, res) => {
-//     const idx = parseInt(req.params.index, 10);
-//     if (isNaN(idx) || idx < 0 || idx >= facilities.length) return res.status(404).json({ error: 'Facility not found' });
-//     facilities.splice(idx, 1);
-//     res.json({ success: true, facilities });
-// });
 
 module.exports = router;

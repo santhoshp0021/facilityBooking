@@ -1,262 +1,155 @@
-import React, { useEffect, useState } from "react";
-import Banner from "../../components/Banner";
+import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import Sidebar from "../../components/Sidebar";
+import Banner from "../../components/Banner";
 
-const PERIODS = 40;
-const PERIOD_TIMES = [
-  { startTime: "08:30", endTime: "09:20" },
-  { startTime: "09:25", endTime: "10:15" },
-  { startTime: "10:30", endTime: "11:20" },
-  { startTime: "11:25", endTime: "12:15" },
-  { startTime: "13:10", endTime: "14:00" },
-  { startTime: "14:05", endTime: "14:55" },
-  { startTime: "15:00", endTime: "15:50" },
-  { startTime: "15:55", endTime: "16:45" },
-];
-
-function getDayAndPeriod(idx) {
-  // idx: 0-39
-  const day = Math.floor(idx / 8) + 1; // 1=Monday, ..., 5=Friday
-  const periodNo = (idx % 8) + 1; // 1-8
-  return { day, periodNo };
-}
-
-const TimeTable = () => {
-  const [enrollments, setEnrollments] = useState([]);
+export default function Timetable() {
   const [userId, setUserId] = useState("");
-  const [courses, setCourses] = useState([]);
-  const [defaultRoom, setDefaultRoom] = useState("");
-  const [defaultLab, setDefaultLab] = useState("");
-  const [periods, setPeriods] = useState(Array(PERIODS).fill(null));
-  const [editIdx, setEditIdx] = useState(null);
-  const [editRoom, setEditRoom] = useState("");
-  const [editLab, setEditLab] = useState("");
+  const [users, setUsers] = useState([]);
+  const [excelFile, setExcelFile] = useState(null);
+  const [message, setMessage] = useState("");
+  const fileInputRef = useRef(null);
 
-  // Fetch all enrollments for user selection
   useEffect(() => {
-    fetch("http://localhost:5000/api/enrollment/all")
-      .then(res => res.json())
-      .then(data => setEnrollments(data));
+    axios
+      .get("http://localhost:5000/api/enrollment/all")
+      .then(res => setUsers(res.data))
+      .catch(err => console.error("Error loading users:", err));
   }, []);
 
-  // Fetch courses when userId changes
-  useEffect(() => {
-    if (!userId) return;
-    fetch(`http://localhost:5000/api/enrollment/courses?userId=${userId}`)
-      .then(res => res.json())
-      .then(data => setCourses(data));
-    setPeriods(Array(PERIODS).fill(null));
-  }, [userId]);
-
-  // Assign course to period
-  const assignCourse = (periodIdx, course) => {
-    const { day, periodNo } = getDayAndPeriod(periodIdx);
-    setPeriods(periods =>
-      periods.map((p, idx) =>
-        idx === periodIdx
-          ? {
-              ...course,
-              free: false,
-              roomNo: course.lab ? "" : defaultRoom,
-              lab: course.lab ? defaultLab : "",
-              periodNo,
-              day,
-              periodId: `${periodNo}-${day}`,
-              startTime: PERIOD_TIMES[periodNo - 1].startTime,
-              endTime: PERIOD_TIMES[periodNo - 1].endTime,
-              staffName: course.staffName || "",
-              courseCode: course.courseCode || "",
-            }
-          : p
-      )
-    );
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.name.endsWith(".xlsx")) {
+      if (file.size <= 2 * 1024 * 1024) {
+        setExcelFile(file);
+      } else {
+        alert("File must be less than or equal to 2MB");
+        e.target.value = null;
+      }
+    } else {
+      alert("Only .xlsx files are allowed");
+      e.target.value = null;
+    }
   };
 
-  // Remove course from period
-  const removeCourse = idx => {
-    setPeriods(periods => periods.map((p, i) => (i === idx ? null : p)));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!userId || !excelFile) {
+      return alert("Please select user and upload an Excel file");
+    }
 
-  // Edit room/lab for a period
-  const handleEdit = idx => {
-    setEditIdx(idx);
-    setEditRoom(periods[idx]?.roomNo || "");
-    setEditLab(periods[idx]?.lab || "");
-  };
-  const saveEdit = idx => {
-    setPeriods(periods =>
-      periods.map((p, i) =>
-        i === idx ? { ...p, roomNo: editRoom, lab: editLab } : p
-      )
-    );
-    setEditIdx(null);
-  };
+    const formData = new FormData();
+    formData.append("timetable", excelFile);
+    formData.append("userId", userId);
 
-  // Submit timetable
-  const handleSubmit = async () => {
-    const filled = periods.map((p, idx) => {
-      const { day, periodNo } = getDayAndPeriod(idx);
-      return p
-        ? p
-        : {
-            periodNo,
-            day,
-            periodId: `${periodNo}-${day}`,
-            free: true,
-            roomNo: "",
-            lab: "",
-            staffName: "",
-            courseCode: "",
-            startTime: PERIOD_TIMES[periodNo - 1].startTime,
-            endTime: PERIOD_TIMES[periodNo - 1].endTime,
-          };
-    });
-    await fetch("http://localhost:5000/api/timetable", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, periods: filled }),
-    });
-    alert("Timetable submitted!");
+    try {
+      const res = await axios.post("http://localhost:5000/api/timetable/upload-timetable", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const courses = res.data.courses || [];
+      setMessage("✅ Uploaded successfully. Courses: " + courses.map(c => c.courseCode).join(", "));
+
+      setUserId("");
+      setExcelFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = null;
+
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Upload failed. Please check your file format or try again.");
+    }
   };
 
   return (
-    <div style={{ padding: 24 }}>
-      <Banner/>
-      <Sidebar/>
-      <h2 style={{paddingTop:96}}>Build Timetable</h2>
-      <div>
-        <label>User ID: </label>
-        <select value={userId} onChange={e => setUserId(e.target.value)}>
-          <option value="">Select User</option>
-          {enrollments.map(e => (
-            <option key={e.userId} value={e.userId}>
-              {e.userId}
-            </option>
-          ))}
-        </select>
-      </div>
-      {userId && (
-        <>
-          <div style={{ margin: "16px 0" }}>
-            <label>Default Room: </label>
-            <input
-              value={defaultRoom}
-              onChange={e => setDefaultRoom(e.target.value)}
-              style={{ marginRight: 16 }}
-            />
-            <label>Default Lab: </label>
-            <input
-              value={defaultLab}
-              onChange={e => setDefaultLab(e.target.value)}
-            />
-          </div>
-          <div>
-            <h4>Courses</h4>
-            <div style={{ display: "flex", gap: 12 }}>
-              {courses.map((c, i) => (
-                <button
-                  key={i}
-                  onClick={() => alert("Drag or select a period to assign")}
-                  draggable
-                  onDragStart={e => {
-                    e.dataTransfer.setData("courseIdx", i);
-                  }}
-                  style={{
-                    padding: 8,
-                    border: "1px solid #ccc",
-                    borderRadius: 4,
-                    background: "#f7f7f7",
-                  }}
-                >
-                  {c.courseCode} - {c.courseName} ({c.lab ? "Lab" : "Room"})
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ marginTop: 24 }}>
-            <h4>40 Periods</h4>
-            <div
+    <div style={{ padding: "24px" }}>
+      <Banner />
+      <Sidebar />
+      <div
+        style={{
+          maxWidth: "500px",
+          margin: "100px auto",
+          padding: "24px",
+          background: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px", textAlign: "center" }}>
+          Upload Timetable (.xlsx)
+        </h2>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="userId" style={{ display: "block", marginBottom: "6px", fontWeight: "500" }}>
+              Select Rep ID (user)
+            </label>
+            <select
+              id="userId"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              required
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(8, 1fr)",
-                gap: 8,
+                width: "100%",
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                color: "#000",
               }}
             >
-              {Array.from({ length: PERIODS }).map((_, idx) => {
-                const { day, periodNo } = getDayAndPeriod(idx);
-                return (
-                  <div
-                    key={idx}
-                    onDrop={e => {
-                      e.preventDefault();
-                      const courseIdx = e.dataTransfer.getData("courseIdx");
-                      if (courseIdx !== "") assignCourse(idx, courses[courseIdx]);
-                    }}
-                    onDragOver={e => e.preventDefault()}
-                    style={{
-                      minHeight: 80,
-                      border: "1px solid #aaa",
-                      borderRadius: 6,
-                      background: periods[idx] ? "#e3f7e3" : "#fafafa",
-                      padding: 6,
-                      position: "relative",
-                    }}
-                  >
-                    <div style={{ fontWeight: 600 }}>
-                      {["Mon", "Tue", "Wed", "Thu", "Fri"][day - 1]} P{periodNo}
-                      <div style={{ fontSize: 12, color: "#888" }}>
-                        {PERIOD_TIMES[periodNo - 1].startTime} - {PERIOD_TIMES[periodNo - 1].endTime}
-                      </div>
-                    </div>
-                    {periods[idx] ? (
-                      editIdx === idx ? (
-                        <div>
-                          <div>
-                            Room:{" "}
-                            <input
-                              value={editRoom}
-                              onChange={e => setEditRoom(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            Lab:{" "}
-                            <input
-                              value={editLab}
-                              onChange={e => setEditLab(e.target.value)}
-                            />
-                          </div>
-                          <button onClick={() => saveEdit(idx)}>Save</button>
-                        </div>
-                      ) : (
-                        <div>
-                          <div>
-                            <b>{periods[idx].courseCode}</b> - {periods[idx].staffName}
-                          </div>
-                          <div>
-                            Room: {periods[idx].roomNo} | Lab: {periods[idx].lab}
-                          </div>
-                          <button onClick={() => handleEdit(idx)}>Edit</button>
-                          <button onClick={() => removeCourse(idx)}>Remove</button>
-                        </div>
-                      )
-                    ) : (
-                      <div style={{ color: "#aaa" }}>Free</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+              <option value="">-- Select User --</option>
+              {users.map(user => (
+                <option key={user.userId} value={user.userId}>
+                  {user.userId}
+                </option>
+              ))}
+            </select>
           </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="excel" style={{ display: "block", marginBottom: "6px", fontWeight: "500" }}>
+              Upload Timetable Excel (.xlsx)
+            </label>
+            <input
+              type="file"
+              accept=".xlsx"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              required
+              style={{ width: "100%", padding: "6px", color: "#000" }}
+            />
+            <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>Max size: 2MB</p>
+          </div>
+
           <button
-            style={{ marginTop: 24, padding: "10px 30px", fontSize: 18 }}
-            onClick={handleSubmit}
+            type="submit"
+            style={{
+              width: "100%",
+              backgroundColor: "#007bff",
+              color: "#fff",
+              padding: "10px",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
           >
-            Submit Timetable
+            Upload
           </button>
-        </>
-      )}
+
+          {message && (
+            <p
+              style={{
+                marginTop: "16px",
+                textAlign: "center",
+                color: message.startsWith("✅") ? "green" : "red",
+                fontWeight: "500",
+              }}
+            >
+              {message}
+            </p>
+          )}
+        </form>
+      </div>
     </div>
   );
-};
-
-export default TimeTable;
+}
