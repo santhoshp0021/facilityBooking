@@ -66,7 +66,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDates = async () => {
       try {
-        const res = await axios.get('/api/admin/available-week-dates');
+        const res = await axios.get('http://localhost:5000/api/admin/available-week-dates');
         setDateList(res.data);
         const todayStr = formatDateLocal(new Date());
         const todayExists = res.data.includes(todayStr);
@@ -82,7 +82,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
-        const res = await axios.get('/api/allFacilities');
+        const res = await axios.get('http://localhost:5000/api/allFacilities');
         console.log("fetchFacilities:",res.data);
         setFacilities(res.data);
         setFilteredFacilities(res.data);
@@ -98,7 +98,7 @@ const Dashboard = () => {
       if (!selectedDate) return;
       setLoading(true);
       try {
-        const res = await axios.get('/api/admin/usage-status', {
+        const res = await axios.get('http://localhost:5000/api/admin/usage-status', {
           params: { date: formatDateLocal(selectedDate) }
         });
         console.log("fetchUsage:",res.data);
@@ -113,10 +113,10 @@ const Dashboard = () => {
 
   const handleFreePeriod = async (facilityName, type, periodNo, userId) => {
     try {
-      await axios.post('/api/admin/free-slot-period', {
+      await axios.post('http://localhost:5000/api/admin/free-slot-period', {
         facilityName, type, date: formatDateLocal(selectedDate), periodNo, userId
       });
-      const usageRes = await axios.get('/api/admin/usage-status', {
+      const usageRes = await axios.get('http://localhost:5000/api/admin/usage-status', {
         params: { date: formatDateLocal(selectedDate) }
       });
       setFacilityUsage(usageRes.data);
@@ -129,10 +129,10 @@ const Dashboard = () => {
 
   const handleFreeHall = async (hallName, startTime, endTime, userId) => {
     try {
-      await axios.post('/api/admin/free-slot-hall', {
+      await axios.post('http://localhost:5000/api/admin/free-slot-hall', {
         hallName, date: formatDateLocal(selectedDate), startTime, endTime, userId
       });
-      const usageRes = await axios.get('/api/admin/usage-status', {
+      const usageRes = await axios.get('http://localhost:5000/api/admin/usage-status', {
         params: { date: formatDateLocal(selectedDate) }
       });
       setFacilityUsage(usageRes.data);

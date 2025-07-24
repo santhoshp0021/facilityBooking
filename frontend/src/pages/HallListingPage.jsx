@@ -62,7 +62,7 @@ export default function HallListingPage() {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        const res = await axios.get('/api/allFacilities');
+        const res = await axios.get('http://localhost:5000/api/allFacilities');
         const allowed = ['hall'];
         setHalls(res.data.filter(f => allowed.includes(f.type)));
       } catch {
@@ -80,7 +80,7 @@ export default function HallListingPage() {
 
   const fetchBookings = async (hallName, date) => {
     try {
-      const res = await fetch(`/api/hall-requests/slots?hallName=${encodeURIComponent(hallName)}&date=${date}`);
+      const res = await fetch(`http://localhost:5000/api/hall-requests/slots?hallName=${encodeURIComponent(hallName)}&date=${date}`);
       const data = await res.json();
       setHallBookings(prev => ({ ...prev, [hallName]: { ...prev[hallName], [date]: data } }));
     } catch {
@@ -137,7 +137,7 @@ export default function HallListingPage() {
     formData.append('pdf', pdfFile);
 
     try {
-      const res = await fetch('/api/hall-request', { method: 'POST', body: formData });
+      const res = await fetch('http://localhost:5000/api/hall-request', { method: 'POST', body: formData });
       if (!res.ok) {
         const err = await res.json();
         alert(err.error || 'Booking failed');

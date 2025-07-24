@@ -63,7 +63,7 @@ const FacilityWiseBooking = () => {
   useEffect(() => {
     const fetchDates = async () => {
       try {
-        const res = await axios.get('/api/admin/available-week-dates');
+        const res = await axios.get('http://localhost:5000/api/admin/available-week-dates');
         setDateList(res.data);
         const todayStr = formatDateLocal(new Date());
         const todayAvailable = res.data.includes(todayStr);
@@ -79,7 +79,7 @@ const FacilityWiseBooking = () => {
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
-        const res = await axios.get('/api/allFacilities');
+        const res = await axios.get('http://localhost:5000/api/allFacilities');
         const allowed = ['room', 'lab', 'projector'];
         const validFacilities = res.data.filter(f => allowed.includes(f.type));
         setFacilities(validFacilities);
@@ -97,7 +97,7 @@ const FacilityWiseBooking = () => {
       setLoading(true);
       try {
         const formattedDate = formatDateLocal(selectedDate);
-        const res = await axios.get('/api/admin/usage-status', {
+        const res = await axios.get('http://localhost:5000/api/admin/usage-status', {
           params: { date: formattedDate }
         });
         setFacilityUsage(res.data);
@@ -120,7 +120,7 @@ const FacilityWiseBooking = () => {
     };
 
     try {
-      const response = await fetch("/api/faculty/facilities/book", {
+      const response = await fetch("http://localhost:5000/api/faculty/facilities/book", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
