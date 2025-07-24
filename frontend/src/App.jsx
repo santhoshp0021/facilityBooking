@@ -39,28 +39,43 @@ function App() {
         <Route
           path="/*"
           element={
-            user  ? (
+            user.role === 'admin'  ? (
               <Routes>
                 <Route path="/home" element={<HomePage User={user} />} />
-                <Route path="/booking" element={<BookingPage User={user} />} />
-                <Route path="/projectorlisting" element={<ProjectorListingPage User={user}/>} />
-                <Route path="/rooms" element={<RoomListingPage User={user} />} />
-                <Route path="/halls" element={<HallListingPage User={user} />} />
-                <Route path="/auditorium" element={<AuditoriumRequest User={user} />} />
-                <Route path="/requests" element={<Requestspage User={user} />} />
-                <Route path="/messages" element={<Messages User={user} />} />
                 <Route path="/history" element={<Historypage User={user} />} />
-                <Route path="dashboard" element={<Dashboard User={user} />} />
-                {/* <Route path="/periodwiseBooking" element={<PeriodwiseBooking User={user} />} /> */}
-                <Route path="/facilitywiseBooking" element={<FacilitywiseBooking User={user} />} />
-                <Route path="/enrollment" element={<EnrollmentPage User={user} />} />
-                <Route path='/timetable' element={<TimeTable User={user} />} />
+                <Route path="/dashboard" element={<Dashboard User={user} />} />
+                <Route path="/requests" element={<Requestspage User={user} />} />
                 <Route path='/facilities' element={<Facilities User={user} />} />
                 <Route path='/register' element={<Register User={user} />} />
-              </Routes>
-            ) : (
+                <Route path='/timetable' element={<TimeTable User={user} />} />
+              </Routes>):(
+                user.role === 'student_rep'  ? (
+                  <Routes>
+                    <Route path="/home" element={<HomePage User={user} />} />
+                    <Route path="/booking" element={<BookingPage User={user} />} />
+                    <Route path="/projectorlisting" element={<ProjectorListingPage User={user}/>} />
+                    <Route path="/rooms" element={<RoomListingPage User={user} />} />
+                </Routes>
+                ):(
+                  user.role === 'faculty' ?(
+                    <Routes>
+                      <Route path="/facilitywiseBooking" element={<FacilitywiseBooking User={user} />} />
+                      <Route path="/halls" element={<HallListingPage User={user} />} />
+                      <Route path="/messages" element={<Messages User={user} />} />
+                      <Route path="/home" element={<HomePage User={user} />} />
+                    </Routes>
+                  ):(
+                    user.role === 'csea_member' ?(
+                      <Routes>
+                        <Route path="/home" element={<HomePage User={user} />} />
+                        <Route path="/facilitywiseBooking" element={<FacilitywiseBooking User={user} />} />
+                        <Route path="/halls" element={<HallListingPage User={user} />} />
+                        <Route path="/auditorium" element={<AuditoriumRequest User={user} />} />
+                        <Route path="/messages" element={<Messages User={user} />} />
+                      </Routes>
+                    ):(
               <Navigate to="/" replace />
-            )
+            ))))
           }
         />
       </Routes>
