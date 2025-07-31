@@ -32,7 +32,7 @@ export default function Register() {
       const data = await res.json();
       if (res.ok) {
         setMessage('User registered successfully!');
-        setForm({ userId: '',  password: '', role: 'student', email:'' });
+        setForm({ userId: '',  password: '', role: 'student_rep', email:'' });
       } else {
         setMessage(data.message || 'Registration failed');
       }

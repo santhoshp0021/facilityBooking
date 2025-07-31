@@ -48,7 +48,6 @@ const Historypage = ({User}) => {
         const text = await res.text();
         try {
           const data = JSON.parse(text);
-          console.log(data);
           setHistory(Array.isArray(data) ? data : []);
         } catch {
           setError('Invalid response from server');

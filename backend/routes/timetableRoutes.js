@@ -64,7 +64,7 @@ router.post('/upload-timetable', upload.single('timetable'), async (req, res) =>
             const labMap = { GFL: 'Ground Floor Lab', FFL: 'First Floor Lab', SFL: 'Second Floor Lab', TFL: 'Third Floor Lab' };
 
             const isLab = labMap.hasOwnProperty(roomOrLab);
-            const lab = isLab ? roomOrLab : '';
+            const lab = isLab ? labMap[roomOrLab] : '';
             const roomNo = isLab ? '' : roomOrLab;
 
             processedPeriods.push({

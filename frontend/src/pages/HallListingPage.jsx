@@ -94,10 +94,7 @@ export default function HallListingPage() {
 
   const isSlotBooked = (hallName, date, slot) => {
     const bookings = hallBookings[hallName]?.[date] || [];
-    return bookings.find(b =>
-      (b.startTime <= slot.start && b.endTime >= slot.start) ||
-      (b.startTime >= slot.start && b.endTime <= slot.end)
-    );
+    return bookings.find(b =>(b.startTime < slot.end && b.endTime > slot.start));
   };
 
   const handleSlotToggle = (hallName, slot) => {

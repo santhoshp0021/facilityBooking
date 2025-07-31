@@ -21,7 +21,6 @@ export default function LoginPage({ onLogin }) {
         body: JSON.stringify({ userId, password })
       });
       const data = await res.json();
-      //console.log('hi',data);
       if (!res.ok) {
         setError(data.error || 'Login failed. Please try again.');
         return;

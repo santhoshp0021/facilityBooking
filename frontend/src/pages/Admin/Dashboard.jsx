@@ -83,7 +83,6 @@ const Dashboard = () => {
     const fetchFacilities = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/allFacilities');
-        console.log("fetchFacilities:",res.data);
         setFacilities(res.data);
         setFilteredFacilities(res.data);
       } catch {
@@ -101,7 +100,6 @@ const Dashboard = () => {
         const res = await axios.get('http://localhost:5000/api/admin/usage-status', {
           params: { date: formatDateLocal(selectedDate) }
         });
-        console.log("fetchUsage:",res.data);
         setFacilityUsage(res.data);
       } catch {
         setFacilityUsage({});

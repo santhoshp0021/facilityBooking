@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Enrollment = require('../models/Enrollment');
+const User = require('../models/User');
 
 // Get enrolled courses for a user (for dropdown selection)
 router.get('/courses', async (req, res) => {
@@ -29,7 +30,7 @@ router.delete('/:userId', async (req, res) => {
 
 router.get('/all', async (req, res) => {
     try {
-      const enrollments = await Enrollment.find({});
+      const enrollments = await User.find({role:"student_rep"});
       res.json(enrollments);
     } catch (err) {
       res.status(500).json({ error: 'Error fetching enrollments' });

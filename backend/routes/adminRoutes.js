@@ -154,7 +154,7 @@ router.post('/free-slot-period', async (req, res) => {
         service: 'gmail',
         auth: {
           user: admin.email, // replace with real admin email
-          pass: 'ibkbdwgufmxzfmqa'   // use app password or secure method
+          pass: 'gvuvoumzoufcimcp'//'ibkbdwgufmxzfmqa'   // use app password or secure method
         }
       });
   
@@ -215,7 +215,7 @@ router.post('/free-slot-hall', async (req, res) => {
       service: 'gmail',
       auth: {
         user: admin.email, // admin email
-        pass: 'ibkbdwgufmxzfmqa'   // app password from Gmail
+        pass: 'gvuvoumzoufcimcp'//'ibkbdwgufmxzfmqa'   // app password from Gmail
       }
     });
 
