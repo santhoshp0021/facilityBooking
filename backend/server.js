@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const schedule = require('node-schedule');
+const multer = require('multer');
+const xlsx = require('xlsx');
 
 const User =  require('./models/User');
 const Weektable =  require('./models/Weektable');
@@ -78,86 +80,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-
-//Register
-app.post('/api/register', async (req, res) => {
-  const { password, role, userId, email } = req.body;
-  try {
-    const existingUser = await User.findOne({ userId });
-    if (existingUser) {
-      return res.status(400).json({ message: 'userId already registered' });
-    }
-
-    // Hash the password using bcrypt
-    const salt = await bcrypt.genSalt(10); // or use 12 rounds
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = new User({  
-      password: hashedPassword,
-      role,
-      userId,
-      email
-    });
-
-    await newUser.save();
-    ensureWeektablesForAllUsers();
-
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-
-// API to get all periods for the current week for a user
-app.get('/api/weekperiod-details', async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: 'userId required' });
-
-  try {
-    // Find the user by userId string
-    const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const weekStart = getCurrentWeekStart();
-    const weektable = await Weektable.findOne({
-      userId: user.userId, // string
-      weekStart: weekStart
-    });
-
-    if (!weektable || !Array.isArray(weektable.periods)) return res.json([]);
-
-    res.json(weektable.periods);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching week periods', details: err.message });
-  }
-});
-
-// API to get all booking history records (populates userId for username) with improved filters
-app.get('/api/booking-history', async (req, res) => {
-  try {
-    const { facilityName, date } = req.query;
-    const filter = {};
-    if (facilityName) {
-      // Case-insensitive, partial match for facility name
-      filter['facility.name'] = { $regex: facilityName, $options: 'i' };
-    }
-    if (date) {
-      // Match date only (ignore time)
-      const start = new Date(date);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(date);
-      end.setHours(23, 59, 59, 999);
-      filter.date = { $gte: start, $lte: end };
-    }
-    const history = await BookingHistory.find(filter).populate('userId', 'userId').sort({ date: -1 });
-    res.json(history);
-  } catch (err) {
-    res.status(500).json({ error: 'Could not fetch booking history' });
-  }
-});
-
 // Add this endpoint to allow frontend to fetch user info by userId
 app.get('/api/users/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -171,74 +93,6 @@ app.get('/api/users/:userId', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Error fetching user', details: err.message });
-  }
-});
-
-app.post('/api/timetable', async (req, res) => {
-  const { userId, periods } = req.body;
-  if (!userId || !Array.isArray(periods) || periods.length !== 40) {
-    return res.status(400).json({ error: 'userId and 40 periods required' });
-  }
-  // Validate periodNo and day
-  for (const p of periods) {
-    if (
-      typeof p.periodNo !== "number" ||
-      p.periodNo < 1 ||
-      p.periodNo > 8 ||
-      typeof p.day !== "number" ||
-      p.day < 1 ||
-      p.day > 5
-    ) {
-      return res.status(400).json({ error: "Each period must have periodNo 1-8 and day 1-5" });
-    }
-  }
-  try {
-    // Remove existing timetable for user if present
-    await Timetable.deleteOne({ userId });
-
-    // Create 40 Period documents
-    const periodDocs = await Period.insertMany(periods);
-
-    // Create Timetable with the new period ObjectIds
-    const timetable = await Timetable.create({
-      userId,
-      periods: periodDocs.map(p => p._id)
-    });
-
-    res.json({ success: true, timetable });
-    ensureWeektablesForAllUsers().then(() => {
-  console.log('');
-}).catch(err => {
-  console.error('Error ensuring weektables:', err);
-});
-  } catch (err) {
-    res.status(500).json({ error: 'Error creating timetable', details: err.message });
-  }
-});
-
-// API to get all projector bookings for the current week for a user
-app.get('/api/projector-bookings', async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) return res.status(400).json({ error: 'userId required' });
-
-  try {
-    const user = await User.findOne({ userId });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const weekStart = getCurrentWeekStart();
-    const weektable = await Weektable.findOne({
-      userId: user.userId, // string
-      weekStart: weekStart
-    });
-
-    if (!weektable || !Array.isArray(weektable.periods)) return res.json([]);
-
-    // Only periods where projector is not empty string
-    const projectorPeriods = weektable.periods.filter(period => period.projector && period.projector !== "");
-
-    res.json(projectorPeriods);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching projector bookings', details: err.message });
   }
 });
 

@@ -1,11 +1,29 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
+const multer = require('multer');
+const xlsx = require('xlsx');
 const router = express.Router();
-const User = require('../models/User');
 const { BookingHistory} =require('../models/BookingHistory');
+const User = require('../models/User');
+const Timetable = require('../models/Timetable');
 const Weektable = require('../models/Weektable');
+const Enrollment = require('../models/Enrollment');
 const HallRequest = require('../models/HallRequest');
+const AuditoriumRequest = require('../models/AuditoriumRequest');
 const {getWeekStart} = require('../utils');
+
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(xlsx)$/)) {
+      return cb(new Error('Only .xlsx files are allowed'));
+    }
+    cb(null, true);
+  }
+});
 
 router.get('/available-week-dates', async (req, res) => {
   try {
@@ -234,4 +252,157 @@ router.post('/free-slot-hall', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+//Register
+router.post('/register', async (req, res) => {
+  const { password, role, userId, email } = req.body;
+  try {
+    const existingUser = await User.findOne({ userId });
+    if (existingUser) {
+      return res.status(400).json({ message: 'userId already registered' });
+    }
+
+    // Hash the password using bcrypt
+    const salt = await bcrypt.genSalt(10); // or use 12 rounds
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({  
+      password: hashedPassword,
+      role,
+      userId,
+      email
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//Bulk Register
+router.post('/register/bulk', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rawData = xlsx.utils.sheet_to_json(sheet);
+
+    if (!Array.isArray(rawData) || rawData.length === 0) {
+      return res.status(400).json({ message: 'Excel file is empty or invalid' });
+    }
+
+    const users = [];
+
+    for (let row of rawData) {
+      // Support both lowercase and capitalized column headers
+      const userId = row.userId || row.UserId;
+      const password = row.password || row.Password;
+      const email = row.email || row.Email;
+      const role = row.role || row.Role;
+
+      if (!userId || !password || !email || !role) continue;
+
+      const existingUser = await User.findOne({ userId });
+      if (existingUser) continue;
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      users.push({
+        userId: String(userId).trim(),
+        password: hashedPassword,
+        email: String(email).trim(),
+        role: role.trim()
+      });
+    }
+
+    if (users.length === 0) {
+      return res.status(400).json({ message: 'No valid users to register' });
+    }
+
+    const result = await User.insertMany(users, { ordered: false });
+
+    res.status(200).json({ message: `${result.length} users registered successfully`, insertedCount: result.length });
+  } catch (err) {
+    console.error('Bulk register error:', err);
+    res.status(500).json({ message: 'Bulk registration failed', error: err.message });
+  }
+});
+
+// ✅ Delete a single user and all related data
+router.delete('/delete', async (req, res) => {
+  const {userId} = req.body;
+  try {
+    const deletedUser = await User.findOneAndDelete({ userId });
+    console.log(deletedUser);
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await Promise.all([
+      Timetable.deleteMany({ userId }),
+      Weektable.deleteMany({ userId }),
+      Enrollment.deleteMany({ userId }),
+      HallRequest.deleteMany({ userId }),
+      AuditoriumRequest.deleteMany({ userId }),
+      BookingHistory.deleteMany({ userId : deletedUser._id})
+    ]);
+
+    res.json({ message: `User ${userId} and related data deleted successfully` });
+  } catch (err) {
+    console.error('Error in delete:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ✅ Bulk delete users from Excel and related data
+router.post('/delete/bulk', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    const userIds = data
+      .map(row => row.userId || row.UserId)
+      .filter(Boolean)
+      .map(id => String(id).trim());
+
+    if (!userIds.length) {
+      return res.status(400).json({ message: 'No valid userIds in Excel file' });
+    }
+
+    // Step 1: Get users and their ObjectIds
+    const users = await User.find({ userId: { $in: userIds } }, '_id userId');
+    const objectIds = users.map(u => u._id);
+
+    // Step 2: Perform delete operations
+    const deleteOps = [
+      User.deleteMany({ userId: { $in: userIds } }),
+      Timetable.deleteMany({ userId: { $in: userIds } }),
+      Weektable.deleteMany({ userId: { $in: userIds } }),
+      Enrollment.deleteMany({ userId: { $in: userIds } }),
+      HallRequest.deleteMany({ userId: { $in: userIds } }),
+      AuditoriumRequest.deleteMany({ userId: { $in: userIds } }),
+      BookingHistory.deleteMany({ userId: { $in: objectIds } })
+    ];
+
+    const [userResult] = await Promise.all(deleteOps);
+
+    res.json({
+      message: `${userResult.deletedCount} users and related data deleted successfully`, deletedCount: userResult.deletedCount
+    });
+  } catch (err) {
+    console.error('Bulk delete error:', err);
+    res.status(500).json({ message: 'Bulk delete failed', error: err.message });
+  }
+});
+
+
 module.exports = router;

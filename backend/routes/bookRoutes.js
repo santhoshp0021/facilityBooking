@@ -184,4 +184,28 @@ router.post('/free-period/:periodId', async (req, res) => {
   }
 });
 
+// API to get all booking history records (populates userId for username) with improved filters
+router.get('/booking-history', async (req, res) => {
+  try {
+    const { facilityName, date } = req.query;
+    const filter = {};
+    if (facilityName) {
+      // Case-insensitive, partial match for facility name
+      filter['facility.name'] = { $regex: facilityName, $options: 'i' };
+    }
+    if (date) {
+      // Match date only (ignore time)
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+      filter.date = { $gte: start, $lte: end };
+    }
+    const history = await BookingHistory.find(filter).populate('userId', 'userId').sort({ date: -1 });
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ error: 'Could not fetch booking history' });
+  }
+});
+
 module.exports = router;

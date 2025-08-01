@@ -13,19 +13,19 @@ export default function GuideMe() {
     switch (user.role) {
       case "admin":
         fileName = "/admin guide.pdf";
-        downloadName = "achievement_repository_guide_me_page_Admin.pdf";
+        downloadName = "facilityBooking_repository_guide_me_page_Admin.pdf";
         break;
       case "faculty":
         fileName = "/faculty guide.pdf";
-        downloadName = "achievement_repository_guide_me_page_Faculty.pdf";
+        downloadName = "facilityBooking_repository_guide_me_page_Faculty.pdf";
         break;
       case "csea_member":
         fileName = "/csea_member guide.pdf";
-        downloadName = "achievement_repository_guide_me_page_CSEA.pdf";
+        downloadName = "facilityBooking_repository_guide_me_page_CSEA.pdf";
         break;
       case "student_rep":
         fileName = "/student_rep guide.pdf";
-        downloadName = "achievement_repository_guide_me_page_StudentRep.pdf";
+        downloadName = "facilityBooking_repository_guide_me_page_StudentRep.pdf";
         break;
       default:
         return;

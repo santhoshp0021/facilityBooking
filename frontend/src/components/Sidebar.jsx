@@ -114,7 +114,7 @@ export default function Sidebar() {
                 <Link to="/timetable" onClick={() => setOpen(false)} style={linkStyle}>TimeTable</Link>
               </li>
               <li>
-                <Link to="/register" onClick={() => setOpen(false)} style={linkStyle}>Register</Link>
+                <Link to="/register" onClick={() => setOpen(false)} style={linkStyle}>Register/Delete</Link>
               </li>
             </>
           )}
