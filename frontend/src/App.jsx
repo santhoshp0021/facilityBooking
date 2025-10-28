@@ -17,6 +17,7 @@ import TimeTable from './pages/Admin/TimeTable';
 import Facilities from './pages/Admin/Facilities';
 import Register from './pages/Admin/Register';
 import FacilitywiseBooking from './pages/FacilitywiseBooking';
+import OfficeAutomation from './pages/OfficeAutomation';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -32,6 +33,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+	<Route path="/officeautomation" element={<OfficeAutomation />} />
         <Route path="/" element={<LoginPage onLogin={handleLogin} />} />
 
         <Route

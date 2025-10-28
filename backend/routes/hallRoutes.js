@@ -120,7 +120,7 @@ router.get('/hall-requests/slots', async (req, res) => {
   }
 
   try {
-    const bookings = await HallRequest.find({ hallName, date, status: "accepted" });
+    const bookings = await HallRequest.find({ hallName, date, status:{ $in:[ "accepted", "pending"]} });
     // Encode PDF buffer to base64 for each booking
     const bookingsWithBase64 = bookings.map(r => {
       const obj = r.toObject();

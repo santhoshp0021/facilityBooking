@@ -23,12 +23,12 @@ export default function RoomListingPage({User}) {
       setLabs([]);
       return;
     }
-    fetch(`http://localhost:5000/api/rooms?periodId=${period.periodId}`)
+    fetch(`http://10.5.12.1:5000/api/rooms?periodId=${period.periodId}`)
       .then(res => res.json())
       .then(data => {
         setRooms(data);
       });
-    fetch(`http://localhost:5000/api/labs?periodId=${period.periodId}`)
+    fetch(`http://10.5.12.1:5000/api/labs?periodId=${period.periodId}`)
       .then(res => res.json())
       .then(data => {
         setLabs(data);
@@ -38,7 +38,7 @@ export default function RoomListingPage({User}) {
   // Fetch enrolled courses for dropdown
   useEffect(() => {
     if (user && user.userId) {
-      fetch(`http://localhost:5000/api/enrollment/courses?userId=${user.userId}`)
+      fetch(`http://10.5.12.1:5000/api/enrollment/courses?userId=${user.userId}`)
         .then(res => res.json())
         .then(data => setCourses(data || []));
     }
@@ -69,7 +69,7 @@ export default function RoomListingPage({User}) {
     try {
       let url, body;
       if (bookingType === 'room') {
-        url = 'http://localhost:5000/api/book-room';
+        url = 'http://10.5.12.1:5000/api/book-room';
         body = {
           userId: user.userId,
           periodId: period.periodId,
@@ -78,7 +78,7 @@ export default function RoomListingPage({User}) {
           courseCode: selectedCourse.courseCode
         };
       } else if (bookingType === 'lab') {
-        url = 'http://localhost:5000/api/book-lab';
+        url = 'http://10.5.12.1:5000/api/book-lab';
         body = {
           userId: user.userId,
           periodId: period.periodId,

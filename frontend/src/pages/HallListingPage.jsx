@@ -3,7 +3,7 @@ import Banner from '../components/Banner';
 import Sidebar from '../components/Sidebar';
 import axios from 'axios';
 
-function generateTimeSlots(start = "08:00", end = "17:00", interval = 15) {
+function generateTimeSlots(start = "08:00", end = "17:00", interval = 30) {
   const slots = [];
   let [hour, minute] = start.split(":").map(Number);
   const [endHour, endMinute] = end.split(":").map(Number);
@@ -62,7 +62,7 @@ export default function HallListingPage() {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/allFacilities');
+        const res = await axios.get('http://10.5.12.1:5000/api/allFacilities');
         const allowed = ['hall'];
         setHalls(res.data.filter(f => allowed.includes(f.type)));
       } catch {
@@ -80,8 +80,9 @@ export default function HallListingPage() {
 
   const fetchBookings = async (hallName, date) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/hall-requests/slots?hallName=${encodeURIComponent(hallName)}&date=${date}`);
+      const res = await fetch(`http://10.5.12.1:5000/api/hall-requests/slots?hallName=${encodeURIComponent(hallName)}&date=${date}`);
       const data = await res.json();
+	console.log(data);
       setHallBookings(prev => ({ ...prev, [hallName]: { ...prev[hallName], [date]: data } }));
     } catch {
       setHallBookings(prev => ({ ...prev, [hallName]: { ...prev[hallName], [date]: [] } }));
@@ -94,7 +95,7 @@ export default function HallListingPage() {
 
   const isSlotBooked = (hallName, date, slot) => {
     const bookings = hallBookings[hallName]?.[date] || [];
-    return bookings.find(b =>(b.startTime < slot.end && b.endTime > slot.start));
+    return bookings.find(b => (b.startTime < slot.end && b.endTime > slot.start));
   };
 
   const handleSlotToggle = (hallName, slot) => {
@@ -134,7 +135,7 @@ export default function HallListingPage() {
     formData.append('pdf', pdfFile);
 
     try {
-      const res = await fetch('http://localhost:5000/api/hall-request', { method: 'POST', body: formData });
+      const res = await fetch('http://10.5.12.1:5000/api/hall-request', { method: 'POST', body: formData });
       if (!res.ok) {
         const err = await res.json();
         alert(err.error || 'Booking failed');
@@ -155,6 +156,7 @@ export default function HallListingPage() {
       <Banner />
       <Sidebar />
       <div style={{ paddingTop: 100, paddingLeft: 120, paddingRight: 20 }}>
+        {/* Date selection */}
         <div style={{ display: 'flex', overflowX: 'auto', gap: 10, marginBottom: 20 }}>
           {dates.map(date => (
             <button
@@ -175,6 +177,7 @@ export default function HallListingPage() {
           ))}
         </div>
 
+        {/* Halls listing */}
         {halls.map(hall => (
           <div key={hall.name} style={{ marginBottom: 30 }}>
             <h3 style={{ color: '#7a5c1c' }}>{hall.name}</h3>
@@ -182,13 +185,33 @@ export default function HallListingPage() {
               {slots.map(slot => {
                 const booked = isSlotBooked(hall.name, selectedDate, slot);
                 const isSelected = (selectedSlots[hall.name] || []).some(s => s.start === slot.start && s.end === slot.end);
+
+                // 🎨 Color logic
+                let bgColor = '#fff';
+                let textColor = 'black';
+
+                if (booked) {
+                  switch (booked.status) {
+                    case 'pending':
+                      bgColor = '#fff9c4'; // light yellow
+                      textColor = 'black';
+                      break;
+                    case 'accepted':
+                      bgColor = '#81c784'; // green
+                      textColor = 'white';
+                      break;
+                  }
+                } else if (isSelected) {
+                  bgColor = '#a7dba7'; // selected free slot
+                }
+
                 return (
                   <div
                     key={slot.start + '-' + slot.end}
                     onClick={() => !booked && isFutureOrToday(selectedDate, slot.start) && handleSlotToggle(hall.name, slot)}
                     style={{
-                      background: booked ? 'rgb(212, 89, 51)' : isSelected ? '#a7dba7' : '#fff',
-                      color: booked ? 'white' : 'black',
+                      background: bgColor,
+                      color: textColor,
                       border: '1px solid #bba988',
                       fontSize: 12,
                       padding: '4px 8px',
@@ -198,12 +221,15 @@ export default function HallListingPage() {
                       textAlign: 'center'
                     }}>
                     {slot.start}<br />
-                    {booked ? `${booked.userId}:${booked.eventName}` : 'Free'}
+                    {booked
+                      ? `${booked.userId}:${booked.eventName} (${booked.status})`
+                      : 'Free'}
                   </div>
                 );
               })}
             </div>
 
+            {/* Booking form for selected slots */}
             {(selectedSlots[hall.name] && selectedSlots[hall.name].length > 0) && (
               <div style={{ marginTop: 10 }}>
                 <input

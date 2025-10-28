@@ -18,7 +18,7 @@ const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
-const { getCurrentWeekStart,ensureWeektablesForAllUsers } = require('./utils');
+const { ensureFiveWeektables, getCurrentWeekStart,ensureWeektablesForAllUsers } = require('./utils');
 
 const express = require('express');
 const bcrypt = require('bcrypt'); 
@@ -38,13 +38,13 @@ app.use('/api/admin',adminRoutes);
 app.use('/api/timetable',timetableRoutes);
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://Vishva06:vishva2006@cluster0.1odrrkw.mongodb.net/facilitydb', {
+mongoose.connect('mongodb://localhost:27017/facilitydb', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {console.log('MongoDB connected');}).catch((err) => {console.error('MongoDB connection error:', err);});
 
 // --- Call this on server startup ---
-ensureWeektablesForAllUsers().then(() => {}).catch(err => {console.error('Error ensuring weektables:', err);});
+//ensureWeektablesForAllUsers().then(() => {}).catch(err => {console.error('Error ensuring weektables:', err);});
 
 // Login route to verify username and password
 app.post('/api/login', async (req, res) => {
@@ -72,7 +72,7 @@ app.post('/api/login', async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid userId or password' });
     }
-
+    ensureFiveWeektables(userId);
     res.json({ success: true, userId: user.userId, role: user.role });
   } catch (err) {
     console.error(err);

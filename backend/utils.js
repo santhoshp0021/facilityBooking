@@ -126,11 +126,81 @@ async function ensureWeektablesForAllUsers() {
   }
 }
 
+async function ensureFiveWeektables(userId) {
+  try {
+    for (let i = 0; i < 5; i++) {
+      const weekStart = getWeekStartWithOffset(i);
+
+      // check if weektable already exists
+      const existing = await Weektable.findOne({ userId, weekStart });
+
+      if (existing) {
+        console.log(`Skipped: Weektable already exists for week ${i + 1} (${weekStart.toDateString()})`);
+        continue; // skip to next week
+      }
+
+      // fetch timetable only if we need to create
+      const timetable = await Timetable.findOne({ userId });
+      let periods = [];
+
+      if (timetable && Array.isArray(timetable.periods) && timetable.periods.length > 0) {
+        // copy from timetable
+        periods = timetable.periods.map(period => ({
+          periodNo: period.periodNo,
+          day: period.day,
+          periodId: period.periodId,
+          free: period.free,
+          roomNo: period.roomNo || '',
+          courseCode: period.courseCode || '',
+          staffName: period.staffName || '',
+          lab: period.lab || '',
+          projector: '',
+          startTime: period.startTime || '',
+          endTime: period.endTime || ''
+        }));
+      } else {
+        // fallback: default 40 slots
+        const startTimes = ["08:30", "09:25", "10:30", "11:25", "13:10", "14:05", "15:00", "15:55"];
+        const endTimes   = ["09:20", "10:15", "11:20", "12:15", "14:00", "14:55", "15:50", "16:45"];
+
+        for (let day = 1; day <= 5; day++) {
+          for (let periodNo = 1; periodNo <= 8; periodNo++) {
+            periods.push({
+              periodNo,
+              day,
+              periodId: `${periodNo}-${day}`,
+              free: true,
+              roomNo: '',
+              courseCode: '',
+              staffName: '',
+              lab: '',
+              projector: '',
+              startTime: startTimes[periodNo - 1],
+              endTime: endTimes[periodNo - 1]
+            });
+          }
+        }
+      }
+
+      // create new weektable
+      await Weektable.create({
+        userId,
+        weekStart,
+        periods
+      });
+
+      console.log(`Created weektable for week ${i + 1} (${weekStart.toDateString()})`);
+    }
+  } catch (err) {
+    console.error("Error ensuring weektables:", err);
+  }
+}
 module.exports = {
   getWeekStart,
   getNextWeekStart,
   getNext4WeekStarts,
   getCurrentWeekStart,
   getWeekStartWithOffset,
+  ensureFiveWeektables,
   ensureWeektablesForAllUsers
 };

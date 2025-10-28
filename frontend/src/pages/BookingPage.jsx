@@ -10,7 +10,7 @@ function getTodayDayNumber() {
 }
 // ✅ Utility to check if a date is today or in the future
 function isFutureOrToday(slotStartTime) {
-  return true;
+  //return true;
   var date = new Date().toISOString();
   const now = new Date();
   var [dateStr,time] = date.split('T');
@@ -37,7 +37,7 @@ export default function BookingPage({User}) {
       try {
         // Always fetch periods from the weektable for the CURRENT logged-in userId
         const res = await fetch(
-          `http://localhost:5000/api/weekperiod-details?userId=${user.userId}`
+          `http://10.5.12.1:5000/api/weekperiod-details?userId=${user.userId}`
         );
         let data = await res.json();
         if (!Array.isArray(data)) data = [];
@@ -85,7 +85,7 @@ export default function BookingPage({User}) {
     async function fetchProjectorBookings() {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/projector-bookings?userId=${user.userId}`
+          `http://10.5.12.1:5000/api/projector-bookings?userId=${user.userId}`
         );
         if (res.ok) {
           const data = await res.json();
@@ -104,13 +104,13 @@ export default function BookingPage({User}) {
   const handleFree = async (period) => {
     setLoading(true);
     try {
-      await fetch(`http://localhost:5000/api/free-period/${period.periodId}`, {
+      await fetch(`http://10.5.12.1:5000/api/free-period/${period.periodId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user?.userId })
       });
       const res = await fetch(
-        `http://localhost:5000/api/weekperiod-details?userId=${user?.userId}`
+        `http://10.5.12.1:5000/api/weekperiod-details?userId=${user?.userId}`
       );
       const data = await res.json();
       setPeriods(data.filter(p => p.day === todayDay).sort((a, b) => a.periodNo - b.periodNo));

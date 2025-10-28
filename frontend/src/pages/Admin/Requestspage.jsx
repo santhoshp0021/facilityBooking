@@ -12,7 +12,7 @@ const Requestspage = ({User}) => {
   const fetchRequests = () => {
     setLoading(true);
     setError('');
-    fetch('http://localhost:5000/api/hall-requests?status=pending')
+    fetch('http://10.5.12.1:5000/api/hall-requests?status=pending')
       .then(async res => {
         if (!res.ok) {
           setError('Failed to fetch requests');
@@ -35,7 +35,7 @@ const Requestspage = ({User}) => {
         setHallRequests([]);
         setLoading(false);
       });
-      fetch('http://localhost:5000/api/audi-requests?status=pending')
+      fetch('http://10.5.12.1:5000/api/audi-requests?status=pending')
       .then(async res => {
         if (!res.ok) {
           setError('Failed to fetch requests');
@@ -66,7 +66,7 @@ const Requestspage = ({User}) => {
 
   // Update status handler
   const handleHallStatus = async (id, status) => {
-    await fetch(`http://localhost:5000/api/hall-requests/${id}/status`, {
+    await fetch(`http://10.5.12.1:5000/api/hall-requests/${id}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
@@ -74,7 +74,7 @@ const Requestspage = ({User}) => {
     fetchRequests();
   };
   const handleAudiStatus = async (id, status) => {
-    await fetch(`http://localhost:5000/api/audi-requests/${id}/status`, {
+    await fetch(`http://10.5.12.1:5000/api/audi-requests/${id}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })

@@ -12,7 +12,7 @@ export default function Facilities() {
   const [editFacility, setEditFacility] = useState({ bookable: true });
 
   const fetchFacilities = async () => {
-    const res = await fetch("http://localhost:5000/api/Facilities");
+    const res = await fetch("http://10.5.12.1:5000/api/Facilities");
     const data = await res.json();
     setFacilities(data);
   };
@@ -23,7 +23,7 @@ export default function Facilities() {
 
   const addFacility = async () => {
     if (!newFacility.name) return;
-    await fetch("http://localhost:5000/api/facilities", {
+    await fetch("http://10.5.12.1:5000/api/facilities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newFacility),
@@ -38,7 +38,7 @@ export default function Facilities() {
   };
 
   const saveEdit = async (id) => {
-    await fetch(`http://localhost:5000/api/facilities/${id}`, {
+    await fetch(`http://10.5.12.1:5000/api/facilities/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookable: editFacility.bookable }),
@@ -48,7 +48,7 @@ export default function Facilities() {
   };
 
   const deleteFacility = async (id) => {
-    await fetch(`http://localhost:5000/api/facilities/${id}`, {
+    await fetch(`http://10.5.12.1:5000/api/facilities/${id}`, {
       method: "DELETE",
     });
     fetchFacilities();

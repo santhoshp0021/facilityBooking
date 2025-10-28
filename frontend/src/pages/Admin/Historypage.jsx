@@ -37,7 +37,7 @@ const Historypage = ({User}) => {
     if (facilityNameFilter) params.push(`facilityName=${encodeURIComponent(facilityNameFilter)}`);
     if (bookingDateFilter) params.push(`date=${encodeURIComponent(bookingDateFilter)}`);
     const query = params.length ? `?${params.join('&')}` : '';
-    fetch(`http://localhost:5000/api/booking-history${query}`)
+    fetch(`http://10.5.12.1:5000/api/booking-history${query}`)
       .then(async res => {
         if (!res.ok) {
           setError('Failed to fetch booking history');
@@ -71,7 +71,7 @@ const Historypage = ({User}) => {
     if (hallNameFilter) params.push(`hallName=${encodeURIComponent(hallNameFilter)}`);
     if (dateFilter) params.push(`date=${encodeURIComponent(dateFilter)}`);
     const query = params.length ? `?${params.join('&')}` : '';
-    fetch(`http://localhost:5000/api/hall-requests/filter${query}`)
+    fetch(`http://10.5.12.1:5000/api/hall-requests/filter${query}`)
       .then(async res => {
         if (!res.ok) {
           setHallReqError('Failed to fetch hall requests');

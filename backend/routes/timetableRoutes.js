@@ -121,9 +121,8 @@ router.post('/upload-timetable', upload.single('timetable'), async (req, res) =>
     for (let p of processedPeriods) {
       if (p.courseCode && courseMap.has(p.courseCode)) {
         p.staffName = courseMap.get(p.courseCode).staffName;
-      }
+    	}
     }
-
     // ✅ STEP 4: Replace or upsert Enrollment
     await Enrollment.findOneAndUpdate(
       { userId },
@@ -137,7 +136,6 @@ router.post('/upload-timetable', upload.single('timetable'), async (req, res) =>
       { userId, periods: processedPeriods },
       { upsert: true, new: true }
     );
-
     // ✅ STEP 6: Replace or create Weektable for next 5 weeks
     for (let weekOffset = 0; weekOffset < 5; weekOffset++) {
       const weekStart = getWeekStartWithOffset(weekOffset);
@@ -147,7 +145,6 @@ router.post('/upload-timetable', upload.single('timetable'), async (req, res) =>
         { upsert: true, new: true }
       );
     }
-
     fs.unlinkSync(filePath);
     res.status(200).json({ message: '✅ Timetable uploaded and processed successfully!' });
 

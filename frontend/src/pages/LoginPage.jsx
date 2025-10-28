@@ -15,7 +15,7 @@ export default function LoginPage({ onLogin }) {
     }
     setError('');
     try {
-        const res = await fetch('http://localhost:5000/api/login', {
+        const res = await fetch('http://10.5.12.1:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, password })

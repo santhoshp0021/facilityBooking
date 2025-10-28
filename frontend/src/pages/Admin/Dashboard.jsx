@@ -29,7 +29,7 @@ const periods = [
   { start: '15:55', end: '16:45' }
 ];
 
-function generateTimeSlots(start = "08:00", end = "17:00", interval = 15) {
+function generateTimeSlots(start = "08:00", end = "17:00", interval = 30) {
   const slots = [];
   let [hour, minute] = start.split(":").map(Number);
   const [endHour, endMinute] = end.split(":").map(Number);
@@ -62,11 +62,11 @@ const Dashboard = () => {
   const [filteredFacilities, setFilteredFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('');
-
+  
   useEffect(() => {
     const fetchDates = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/available-week-dates');
+        const res = await axios.get('http://10.5.12.1:5000/api/admin/available-week-dates');
         setDateList(res.data);
         const todayStr = formatDateLocal(new Date());
         const todayExists = res.data.includes(todayStr);
@@ -82,7 +82,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchFacilities = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/allFacilities');
+        const res = await axios.get('http://10.5.12.1:5000/api/allFacilities');
         setFacilities(res.data);
         setFilteredFacilities(res.data);
       } catch {
@@ -97,7 +97,7 @@ const Dashboard = () => {
       if (!selectedDate) return;
       setLoading(true);
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/usage-status', {
+        const res = await axios.get('http://10.5.12.1:5000/api/admin/usage-status', {
           params: { date: formatDateLocal(selectedDate) }
         });
         setFacilityUsage(res.data);
@@ -111,10 +111,10 @@ const Dashboard = () => {
 
   const handleFreePeriod = async (facilityName, type, periodNo, userId) => {
     try {
-      await axios.post('http://localhost:5000/api/admin/free-slot-period', {
+      await axios.post('http://10.5.12.1:5000/api/admin/free-slot-period', {
         facilityName, type, date: formatDateLocal(selectedDate), periodNo, userId
       });
-      const usageRes = await axios.get('http://localhost:5000/api/admin/usage-status', {
+      const usageRes = await axios.get('http://10.5.12.1:5000/api/admin/usage-status', {
         params: { date: formatDateLocal(selectedDate) }
       });
       setFacilityUsage(usageRes.data);
@@ -127,10 +127,10 @@ const Dashboard = () => {
 
   const handleFreeHall = async (hallName, startTime, endTime, userId) => {
     try {
-      await axios.post('http://localhost:5000/api/admin/free-slot-hall', {
+      await axios.post('http://10.5.12.1:5000/api/admin/free-slot-hall', {
         hallName, date: formatDateLocal(selectedDate), startTime, endTime, userId
       });
-      const usageRes = await axios.get('http://localhost:5000/api/admin/usage-status', {
+      const usageRes = await axios.get('http://10.5.12.1:5000/api/admin/usage-status', {
         params: { date: formatDateLocal(selectedDate) }
       });
       setFacilityUsage(usageRes.data);
@@ -234,18 +234,30 @@ const Dashboard = () => {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {timeSlots.map((slot, i) => {
                   const match = usage.find(u => u.startTime <= slot.start && u.endTime >= slot.end);
+		  let bgColor = match ? '#f8d7da' : 'rgb(146, 237, 123)';
+		  let textColor = 'black';
+		  if (match && type === 'hall') {
+			if (match.status === 'pending') {
+				bgColor = '#fff9c4'; // light yellow
+				textColor = 'black';
+			} else if (match.status === 'accepted') {
+				bgColor = '#81c784'; // green
+				textColor = 'white';
+			}
+		}
                   return (
-                    <div key={i} style={{
-                      padding: '15px 6px',
-                      fontSize: 12,
-                      background: match ? '#f8d7da' : 'rgb(146, 237, 123)',
-                      borderRadius: 4,
-                      minWidth: 100,
-                      textAlign: 'center',
-                      position: 'relative'
-                    }}>
-                      {slot.start} - {slot.end}<br />
-                      {match ? (type === 'hall' ? `${match.bookedBy}:${match.eventName}` : match.bookedBy) : 'Free'}
+			<div key={i} style={{
+				padding: '15px 6px',
+				fontSize: 12,
+				background: bgColor,
+				color: textColor,
+				borderRadius: 4,
+				minWidth: 100,
+				textAlign: 'center',
+				position: 'relative'
+			}}>
+			{slot.start} - {slot.end}<br />
+			{match? (type === 'hall'? `${match.bookedBy}:${match.eventName} (${match.status})`: match.bookedBy): 'Free'}
 
                       {match && isFutureOrToday(formattedDate, slot.start) && (
                         <button

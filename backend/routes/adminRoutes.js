@@ -132,7 +132,7 @@ router.post('/free-slot-period', async (req, res) => {
   
     try {
       // 2. Get user email
-      const admin = await User.findOne({ userId : 'myadmin'});
+      const admin = await User.findOne({ userId : 'admin'});
       const user = await User.findOne({ userId });
       if (!user || !user.email) {
         return res.status(404).json({ error: 'User email not found' });
@@ -167,12 +167,13 @@ router.post('/free-slot-period', async (req, res) => {
         usageDate: dateObj,
         facility: { name: facilityName, type: type, free: true }
       });
+
       // 3. Send email to user
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: admin.email, // replace with real admin email
-          pass: 'gvuvoumzoufcimcp'//'ibkbdwgufmxzfmqa'   // use app password or secure method
+          pass: 'gvuvoumzoufcimcp' //'ibkbdwgufmxzfmqa'   // use app password or secure method
         }
       });
   
@@ -223,7 +224,7 @@ router.post('/free-slot-hall', async (req, res) => {
 
     // 2. Fetch the user's email
     const user = await User.findOne({ userId });
-    const admin = await User.findOne({ userId: "myadmin"})
+    const admin = await User.findOne({ userId: "admin"})
     if (!user || !user.email) {
       return res.status(404).json({ error: 'User email not found' });
     }
@@ -233,7 +234,7 @@ router.post('/free-slot-hall', async (req, res) => {
       service: 'gmail',
       auth: {
         user: admin.email, // admin email
-        pass: 'gvuvoumzoufcimcp'//'ibkbdwgufmxzfmqa'   // app password from Gmail
+        pass: 'gvuvoumzoufcimcp' //'ibkbdwgufmxzfmqa'   // app password from Gmail
       }
     });
 

@@ -35,7 +35,7 @@ export default function Register() {
     setMessage('');
 
     try {
-      const res = await fetch('http://localhost:5000/api/admin/register', {
+      const res = await fetch('http://10.5.12.1:5000/api/admin/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -69,7 +69,7 @@ export default function Register() {
     formData.append('file', bulkFile);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/${endpoint}`, {
+      const res = await fetch(`http://10.5.12.1:5000/api/admin/${endpoint}`, {
         method: 'POST',
         body: formData
       });
@@ -96,7 +96,7 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/admin/delete', {
+      const res = await fetch('http://10.5.12.1:5000/api/admin/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(deleteForm)
@@ -161,6 +161,21 @@ export default function Register() {
 
           {mode === 'bulk' && (
             <form onSubmit={(e) => handleBulkSubmit(e, 'register/bulk')} className="register-form">
+		 <div style={{ marginBottom: "16px", textAlign: "center" }}>
+			<a href="/demo_bulk_register.xlsx" download="demo_bulk_register.xlsx"
+				style={{
+					display: "inline-block",
+					backgroundColor: "#28a745",
+					color: "#fff",
+					padding: "8px 12px",
+					borderRadius: "4px",
+					textDecoration: "none",
+					fontWeight: "500",
+				}}
+			>
+			Download Bulk Register Template
+			</a>
+		</div>
               <input type="file" accept=".xlsx" onChange={(e) => setBulkFile(e.target.files[0])} ref={fileInputRef} required />
               <button type="submit">Upload Excel File</button>
             </form>
@@ -175,7 +190,22 @@ export default function Register() {
 
           {mode === 'deleteBulk' && (
             <form onSubmit={(e) => handleBulkSubmit(e, 'delete/bulk')} className="register-form">
-              <input type="file" accept=".xlsx" onChange={(e) => setBulkFile(e.target.files[0])} ref={fileInputRef} required />
+              <div style={{ marginBottom: "16px", textAlign: "center" }}>
+                        <a href="/demo_bulk_delete.xlsx" download="demo_bulk_delete.xlsx"
+                                style={{
+                                        display: "inline-block",
+                                        backgroundColor: "#28a745",
+                                        color: "#fff",
+                                        padding: "8px 12px",
+                                        borderRadius: "4px",
+                                        textDecoration: "none",
+                                        fontWeight: "500",
+                                }}
+                        >
+                        Download Bulk Delete Template
+                        </a>
+                </div>
+		<input type="file" accept=".xlsx" onChange={(e) => setBulkFile(e.target.files[0])} ref={fileInputRef} required />
               <button type="submit">Bulk Delete via Excel</button>
             </form>
           )}

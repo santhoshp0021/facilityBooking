@@ -12,7 +12,7 @@ export default function Timetable() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/enrollment/all")
+      .get("http://10.5.12.1:5000/api/enrollment/all")
       .then(res => setUsers(res.data))
       .catch(err => console.error("Error loading users:", err));
   }, []);
@@ -43,7 +43,7 @@ export default function Timetable() {
     formData.append("userId", userId);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/timetable/upload-timetable", formData, {
+      const res = await axios.post("http://10.5.12.1:5000/api/timetable/upload-timetable", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -119,6 +119,25 @@ export default function Timetable() {
               style={{ width: "100%", padding: "6px", color: "#000" }}
             />
             <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>Max size: 2MB</p>
+          </div>
+
+          {/* ✅ Download button */}
+          <div style={{ marginBottom: "16px", textAlign: "center" }}>
+            <a
+              href="/demo_timetable.xlsx"
+              download="demo_timetable.xlsx"
+              style={{
+                display: "inline-block",
+                backgroundColor: "#28a745",
+                color: "#fff",
+                padding: "8px 12px",
+                borderRadius: "4px",
+                textDecoration: "none",
+                fontWeight: "500",
+              }}
+            >
+              Download Timetable Template
+            </a>
           </div>
 
           <button
