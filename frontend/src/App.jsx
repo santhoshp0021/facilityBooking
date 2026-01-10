@@ -18,6 +18,7 @@ import Facilities from './pages/Admin/Facilities';
 import Register from './pages/Admin/Register';
 import FacilitywiseBooking from './pages/FacilitywiseBooking';
 import OfficeAutomation from './pages/OfficeAutomation';
+import ProjectorHandler from './pages/ProjectorHandler';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -73,6 +74,11 @@ function App() {
                 <Route path="/auditorium" element={<AuditoriumRequest User={user} />} />
                 <Route path="/messages" element={<Messages User={user} />} />
               </Routes>
+            ) :user.role === 'projector_handler' ? (
+              <Routes>
+                <Route path="/home" element={<HomePage User={user} />} />
+                <Route path="/projectorhandler" element={<ProjectorHandler User={user} />} />
+              </Routes>
             ) : (
               <Navigate to="/" replace />
             )
@@ -84,3 +90,4 @@ function App() {
 }
 
 export default App;
+

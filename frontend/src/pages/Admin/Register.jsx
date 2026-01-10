@@ -35,7 +35,7 @@ export default function Register() {
     setMessage('');
 
     try {
-      const res = await fetch('http://10.5.12.1:5000/api/admin/register', {
+      const res = await fetch('http://localhost:5000/api/admin/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -69,7 +69,7 @@ export default function Register() {
     formData.append('file', bulkFile);
 
     try {
-      const res = await fetch(`http://10.5.12.1:5000/api/admin/${endpoint}`, {
+      const res = await fetch(`http://localhost:5000/api/admin/${endpoint}`, {
         method: 'POST',
         body: formData
       });
@@ -96,7 +96,7 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch('http://10.5.12.1:5000/api/admin/delete', {
+      const res = await fetch('http://localhost:5000/api/admin/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(deleteForm)
@@ -266,3 +266,4 @@ export default function Register() {
     </>
   );
 }
+

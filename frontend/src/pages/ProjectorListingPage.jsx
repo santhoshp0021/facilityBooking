@@ -26,8 +26,8 @@ export default function ProjectorListingPage() {
       }
 
       const [allFacilitiesRes, bookingStatusRes] = await Promise.all([
-        fetch('http://10.5.12.1:5000/api/facilities/projectors'),
-        fetch(`http://10.5.12.1:5000/api/projectors?periodId=${periodId}`)
+        fetch('http://localhost:5000/api/facilities/projectors'),
+        fetch(`http://localhost:5000/api/projectors?periodId=${periodId}`)
       ]);
 
       const allProjectors = await allFacilitiesRes.json();
@@ -70,7 +70,7 @@ export default function ProjectorListingPage() {
     }
 
     try {
-      const res = await fetch('http://10.5.12.1:5000/api/book-projector', {
+      const res = await fetch('http://localhost:5000/api/book-projector', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -212,3 +212,4 @@ export default function ProjectorListingPage() {
     </div>
   );
 }
+

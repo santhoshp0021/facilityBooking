@@ -55,7 +55,7 @@ app.post('/api/login', async (req, res) => {
   }
   try {
     const user = await User.findOne({ userId });
-
+    
     if (!user) {
       return res.status(401).json({ error: 'Invalid userId or password' });
     }
@@ -70,6 +70,7 @@ app.post('/api/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      console.log('c1');
       return res.status(401).json({ error: 'Invalid userId or password' });
     }
     ensureFiveWeektables(userId);

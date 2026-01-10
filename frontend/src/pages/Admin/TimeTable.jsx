@@ -12,7 +12,7 @@ export default function Timetable() {
 
   useEffect(() => {
     axios
-      .get("http://10.5.12.1:5000/api/enrollment/all")
+      .get("http://localhost:5000/api/enrollment/all")
       .then(res => setUsers(res.data))
       .catch(err => console.error("Error loading users:", err));
   }, []);
@@ -43,7 +43,7 @@ export default function Timetable() {
     formData.append("userId", userId);
 
     try {
-      const res = await axios.post("http://10.5.12.1:5000/api/timetable/upload-timetable", formData, {
+      const res = await axios.post("http://localhost:5000/api/timetable/upload-timetable", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -172,3 +172,4 @@ export default function Timetable() {
     </div>
   );
 }
+

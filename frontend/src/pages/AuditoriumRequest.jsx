@@ -88,7 +88,7 @@ export default function AuditoriumRequest({ User }) {
       form.append('userId', userId);
       form.append('pdf', pdfFile);
 
-      const res = await fetch('http://10.5.12.1:5000/api/audi-request', {
+      const res = await fetch('http://localhost:5000/api/audi-request', {
         method: 'POST',
         body: form,
       });
@@ -268,3 +268,4 @@ export default function AuditoriumRequest({ User }) {
     </div>
   );
 }
+

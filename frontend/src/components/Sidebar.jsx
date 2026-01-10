@@ -72,24 +72,29 @@ export default function Sidebar() {
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}><li>
           <Link to="/home" onClick={() => setOpen(false)} style={linkStyle}>Home</Link>
           </li>
-          {['secretary','csea_member'].includes(user.role) && (
+          {['csea_member'].includes(user.role) && (
             <li>
-              <Link to="/facilitywiseBooking" onClick={() => setOpen(false)} style={linkStyle}>Facilitywise Booking</Link>
-              <Link to="/halls" onClick={() => setOpen(false)} style={linkStyle}>Halls</Link>
+              <Link to="/facilitywiseBooking" onClick={() => setOpen(false)} style={linkStyle}>Room/ Lab/ Projector Booking</Link>
+              <Link to="/halls" onClick={() => setOpen(false)} style={linkStyle}>Hall Booking</Link>
               <Link to="/auditorium" onClick={() => setOpen(false)} style={linkStyle}>Auditorium</Link>
               <Link to="/messages" onClick={() => setOpen(false)} style={linkStyle}>Messages</Link>
             </li>
           )}
           {['faculty'].includes(user.role) && (
             <li>
-              <Link to="/facilitywiseBooking" onClick={() => setOpen(false)} style={linkStyle}>Facilitywise Booking</Link>
-              <Link to="/halls" onClick={() => setOpen(false)} style={linkStyle}>Halls</Link>
+              <Link to="/facilitywiseBooking" onClick={() => setOpen(false)} style={linkStyle}>Room/ Lab/ Projector Booking</Link>
+              <Link to="/halls" onClick={() => setOpen(false)} style={linkStyle}>Hall Booking</Link>
               <Link to="/messages" onClick={() => setOpen(false)} style={linkStyle}>Messages</Link>
             </li>
           )}
           {user.role === 'student_rep' && (
             <li>
               <Link to="/booking" onClick={() => setOpen(false)} style={linkStyle}>Bookings</Link>
+            </li>
+          )}
+          {user.role === 'projector_handler' && (
+            <li>
+              <Link to="/projectorhandler" onClick={() => setOpen(false)} style={linkStyle}>ProjectorHandler</Link>
             </li>
           )}
 

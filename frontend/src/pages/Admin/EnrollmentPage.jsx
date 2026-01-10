@@ -28,7 +28,7 @@ const EnrollmentPage = () => {
   // Fetch all enrollments on mount or after submit/delete
   const fetchEnrollments = async () => {
     try {
-      const res = await fetch("http://10.5.12.1:5000/api/enrollment/all");
+      const res = await fetch("http://localhost:5000/api/enrollment/all");
       if (res.ok) {
         const data = await res.json();
         setAllEnrollments(data);
@@ -94,7 +94,7 @@ const EnrollmentPage = () => {
       return;
     }
     try {
-      const res = await fetch("http://10.5.12.1:5000/api/enrollment/", {
+      const res = await fetch("http://localhost:5000/api/enrollment/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, enrolled: courses }),
@@ -116,7 +116,7 @@ const EnrollmentPage = () => {
   const handleDelete = async (delUserId) => {
     if (!window.confirm(`Delete enrollment for userId: ${delUserId}?`)) return;
     try {
-      const res = await fetch(`http://10.5.12.1:5000/api/enrollment/${delUserId}`, {
+      const res = await fetch(`http://localhost:5000/api/enrollment/${delUserId}`, {
         method: "DELETE",
       });
       if (res.ok) {

@@ -13,6 +13,16 @@ router.get('/allFacilities', async (req, res) => {
   }
 });
 
+// GET all distinct facility types
+router.get("/facilityTypes", async (req, res) => {
+  try {
+    const types = await Facility.distinct("type");
+    res.json(types);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET projectors
 router.get("/facilities/projectors", async (req, res) => {
   try {

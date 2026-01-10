@@ -27,7 +27,7 @@ const Messages = ({User}) => {
     setHallLoading(true);
     setError('');
     Promise.all([
-      fetch(`http://10.5.12.1:5000/api/hall-requests?status=accepted&userId=${encodeURIComponent(userId)}`)
+      fetch(`http://localhost:5000/api/hall-requests?status=accepted&userId=${encodeURIComponent(userId)}`)
         .then(async res => {
           if (!res.ok) return [];
           const text = await res.text();
@@ -38,7 +38,7 @@ const Messages = ({User}) => {
             return [];
           }
         }),
-      fetch(`http://10.5.12.1:5000/api/hall-requests?status=rejected&userId=${encodeURIComponent(userId)}`)
+      fetch(`http://localhost:5000/api/hall-requests?status=rejected&userId=${encodeURIComponent(userId)}`)
         .then(async res => {
           if (!res.ok) return [];
           const text = await res.text();
@@ -49,7 +49,7 @@ const Messages = ({User}) => {
             return [];
           }
         }),
-        fetch(`http://10.5.12.1:5000/api/hall-requests?status=withdrawn&userId=${encodeURIComponent(userId)}`)
+        fetch(`http://localhost:5000/api/hall-requests?status=withdrawn&userId=${encodeURIComponent(userId)}`)
         .then(async res => {
           if (!res.ok) return [];
           const text = await res.text();
@@ -75,7 +75,7 @@ const Messages = ({User}) => {
         setHallLoading(false);
       });
       Promise.all([
-        fetch(`http://10.5.12.1:5000/api/audi-requests?status=accepted&userId=${encodeURIComponent(userId)}`)
+        fetch(`http://localhost:5000/api/audi-requests?status=accepted&userId=${encodeURIComponent(userId)}`)
           .then(async res => {
             if (!res.ok) return [];
             const text = await res.text();
@@ -86,7 +86,7 @@ const Messages = ({User}) => {
               return [];
             }
           }),
-        fetch(`http://10.5.12.1:5000/api/audi-requests?status=rejected&userId=${encodeURIComponent(userId)}`)
+        fetch(`http://localhost:5000/api/audi-requests?status=rejected&userId=${encodeURIComponent(userId)}`)
           .then(async res => {
             if (!res.ok) return [];
             const text = await res.text();
@@ -593,3 +593,4 @@ from ${req.startTime} to ${req.endTime} for the event "${req.eventName}".`;
 };
 
 export default Messages;
+
